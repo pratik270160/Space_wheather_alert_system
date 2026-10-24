@@ -1419,10 +1419,11 @@ else:
 # ---------- AI PREDICTION CENTER · OFFICIAL HISTORICAL Kp MODEL ----------
 @st.cache_data(ttl=86400, show_spinner=False)
 def get_gfz_historical_kp(years=5):
-    """Fetch official historical 3-hour Kp from GFZ's documented JSON API.
+    """Fetch official definitive 3-hour Kp values from GFZ's documented JSON API.
 
-    Uses definitive values to keep training labels stable. The API is authoritative
-    for Kp; it is separate from NOAA's higher-frequency estimated Kp feed.
+    GFZ's service response shape can vary by API version. This parser supports
+    record-oriented JSON and column-oriented JSON while validating timestamps
+    and numeric Kp values. It never manufactures observations.
     """
     end_time = datetime.now(timezone.utc)
     start_time = end_time - timedelta(days=365 * years)
@@ -1433,42 +1434,67 @@ def get_gfz_historical_kp(years=5):
         "index": "Kp",
         "status": "def",
     }
-    response = requests.get(url, params=params, timeout=45)
+    response = requests.get(url, params=params, timeout=60, headers={"Accept": "application/json", "User-Agent": "SpaceWeatherAlert/1.0"})
     response.raise_for_status()
     payload = response.json()
 
-    # The API may return a list of records or a wrapper object. Normalize both.
-    if isinstance(payload, dict):
-        records = None
-        for key in ("data", "results", "result", "values", "kp", "Kp", "observations"):
-            if isinstance(payload.get(key), list):
-                records = payload[key]
-                break
-        if records is None:
-            # Also support a column-oriented response.
-            time_key = next((k for k in ("time", "datetime", "timestamp", "date", "time_tag") if k in payload), None)
-            val_key = next((k for k in ("Kp", "kp", "value", "index") if k in payload), None)
-            if time_key and val_key and isinstance(payload[time_key], list) and isinstance(payload[val_key], list):
-                records = [{"time": t, "Kp": v} for t, v in zip(payload[time_key], payload[val_key])]
-        if records is None:
-            raise ValueError("GFZ Kp API returned an unrecognized JSON structure")
-    elif isinstance(payload, list):
-        records = payload
-    else:
-        raise ValueError("GFZ Kp API response was not a JSON list/object")
-
+    time_names = ("time", "datetime", "timestamp", "date", "time_tag", "starttime", "start_time", "time_utc", "timeUTC")
+    value_names = ("Kp", "kp", "value", "index", "Kp_value", "kp_value")
     rows = []
-    for rec in records:
-        if isinstance(rec, dict):
-            tk = next((k for k in ("time", "datetime", "timestamp", "date", "time_tag", "starttime", "start_time") if k in rec), None)
-            vk = next((k for k in ("Kp", "kp", "value", "index") if k in rec), None)
-            if tk and vk:
-                rows.append((rec[tk], rec[vk]))
-        elif isinstance(rec, (list, tuple)) and len(rec) >= 2:
-            rows.append((rec[0], rec[1]))
 
+    def is_seq(value):
+        return isinstance(value, (list, tuple))
+
+    def add_pair(t, v):
+        if not is_seq(t) and not is_seq(v) and t is not None and v is not None:
+            rows.append((t, v))
+
+    def walk(obj, depth=0):
+        """Recursively recognize common GFZ JSON response layouts."""
+        if depth > 8 or obj is None:
+            return
+        if isinstance(obj, dict):
+            lower_map = {str(k).lower(): k for k in obj.keys()}
+            tk = next((lower_map[k.lower()] for k in time_names if k.lower() in lower_map), None)
+            vk = next((lower_map[k.lower()] for k in value_names if k.lower() in lower_map), None)
+            if tk is not None and vk is not None:
+                times, values = obj[tk], obj[vk]
+                if is_seq(times) and is_seq(values):
+                    for t, v in zip(times, values):
+                        add_pair(t, v)
+                    return
+                if not is_seq(times) and not is_seq(values):
+                    add_pair(times, values)
+                    return
+            # Some API versions wrap column arrays in a data/result object.
+            for child in obj.values():
+                walk(child, depth + 1)
+        elif isinstance(obj, (list, tuple)):
+            for item in obj:
+                if isinstance(item, dict):
+                    before = len(rows)
+                    walk(item, depth + 1)
+                    if len(rows) == before:
+                        # Support a single record using less common field names.
+                        keys = {str(k).lower(): k for k in item}
+                        tk = next((keys[k.lower()] for k in time_names if k.lower() in keys), None)
+                        vk = next((keys[k.lower()] for k in value_names if k.lower() in keys), None)
+                        if tk is not None and vk is not None:
+                            add_pair(item[tk], item[vk])
+                elif is_seq(item) and len(item) >= 2:
+                    # Common table format: [timestamp, Kp, ...]
+                    if isinstance(item[0], str):
+                        add_pair(item[0], item[1])
+                    else:
+                        walk(item, depth + 1)
+
+    walk(payload)
     if not rows:
-        raise ValueError("GFZ Kp API returned no recognizable timestamp/Kp records")
+        preview = repr(payload)
+        if len(preview) > 350:
+            preview = preview[:350] + "..."
+        raise ValueError(f"GFZ Kp API returned no recognizable timestamp/Kp records (response type: {type(payload).__name__}; preview: {preview})")
+
     df = pd.DataFrame(rows, columns=["time_tag", "kp"])
     df["time_tag"] = pd.to_datetime(df["time_tag"], utc=True, errors="coerce")
     df["kp"] = pd.to_numeric(df["kp"], errors="coerce")
@@ -1476,7 +1502,7 @@ def get_gfz_historical_kp(years=5):
     df = df[np.isfinite(df["kp"]) & df["kp"].between(0, 9)]
     df = df.drop_duplicates("time_tag").sort_values("time_tag").reset_index(drop=True)
     if df.empty:
-        raise ValueError("No valid definitive Kp observations remained after quality checks")
+        raise ValueError("GFZ Kp response contained records, but none passed timestamp and Kp quality checks")
     return df
 
 st.markdown("""
