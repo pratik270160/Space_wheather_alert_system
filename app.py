@@ -143,13 +143,58 @@ hr {
     0%, 100% { opacity: 1; box-shadow: 0 0 5px rgba(74, 222, 128, .55); }
     50% { opacity: .65; box-shadow: 0 0 15px rgba(74, 222, 128, .95); }
 }
+/* Premium animated sidebar controls */
+[data-testid="stSidebar"] > div:first-child { padding-top: 1.1rem; }
+[data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    color: #eaf7ff !important; letter-spacing: .02em;
+}
+[data-testid="stSidebar"] [data-testid="stRadio"] > label {
+    color: #a9c5dc !important; font-size: .76rem !important; font-weight: 800 !important;
+    letter-spacing: .12em; text-transform: uppercase; margin-bottom: .5rem;
+}
+[data-testid="stSidebar"] [data-testid="stRadio"] [role="radiogroup"] { gap: .45rem; }
+[data-testid="stSidebar"] [data-testid="stRadio"] [role="radio"] {
+    background: linear-gradient(135deg, rgba(19, 42, 64, .92), rgba(12, 28, 47, .96));
+    border: 1px solid rgba(112, 171, 220, .25); border-radius: 12px;
+    padding: .55rem .72rem; min-height: 2.6rem;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+[data-testid="stSidebar"] [data-testid="stRadio"] [role="radio"]:hover {
+    transform: translateY(-2px); border-color: rgba(85, 230, 242, .75);
+    box-shadow: 0 6px 18px rgba(35, 199, 225, .12);
+}
+[data-testid="stSidebar"] [data-testid="stRadio"] [role="radio"][aria-checked="true"] {
+    background: linear-gradient(110deg, rgba(13, 148, 166, .28), rgba(124, 89, 220, .26));
+    border: 1px solid rgba(85, 230, 242, .9);
+    box-shadow: 0 0 0 1px rgba(85, 230, 242, .10), 0 7px 22px rgba(27, 192, 220, .13);
+}
+[data-testid="stSidebar"] [data-testid="stRadio"] [role="radio"] > div:first-child { display: none; }
+[data-testid="stSidebar"] [data-testid="stRadio"] [role="radio"] p {
+    color: #dceeff !important; font-weight: 650; margin: 0;
+}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] > label,
+[data-testid="stSidebar"] [data-testid="stCheckbox"] label { color: #c5d9eb !important; font-weight: 600; }
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+    border-radius: 12px; background: rgba(12, 29, 48, .94);
+    border-color: rgba(112, 171, 220, .32);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within {
+    border-color: var(--space-cyan); box-shadow: 0 0 0 2px rgba(85, 230, 242, .13);
+}
+[data-testid="stSidebar"] [data-testid="stCheckbox"] [role="checkbox"] {
+    border-radius: 5px; transition: transform .18s ease, box-shadow .18s ease;
+}
+[data-testid="stSidebar"] [data-testid="stCheckbox"] [role="checkbox"]:hover {
+    transform: scale(1.08); box-shadow: 0 0 10px rgba(85, 230, 242, .25);
+}
+@media (max-width: 640px) {
+    [data-testid="stSidebar"] [data-testid="stRadio"] [role="radiogroup"] { gap: .3rem; }
+    [data-testid="stSidebar"] [data-testid="stRadio"] [role="radio"] { padding: .48rem .5rem; }
+}
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-        scroll-behavior: auto !important;
-    }
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -237,79 +282,67 @@ TXT = {
     },
     "hi": {
         "title": "🛰️ अंतरिक्ष मौसम चेतावनी प्रणाली",
-        "caption": "दूरसंचार और कृषि के लिए पूर्व चेतावनी | डेटा: NOAA SWPC",
+        "caption": "दूरसंचार और खेती के लिए पहले से चेतावनी | डेटा: NOAA SWPC",
         "settings": "सेटिंग्स",
-        "view": "दृश्य",
+        "view": "देखें",
         "views": ["दूरसंचार", "किसान"],
-        "demo": "डेमो मोड (मई 2024 तूफ़ान का अनुकरण)",
+        "demo": "डेमो मोड (मई 2024 के तूफ़ान का अनुकरण)",
         "state": "अपना राज्य चुनें",
-        "radio": "HF रेडियो ब्लैकआउट",
+        "radio": "HF रेडियो बाधा",
         "geo": "भू-चुंबकीय तूफ़ान",
-        "gnss": "GNSS/GPS चिंता",
+        "gnss": "GNSS/GPS की समस्या",
         "farm": "खेती के उपकरण",
         "none": "कोई नहीं",
         "night": "रात का समय: प्रभावित नहीं",
         "unavail": "उपलब्ध नहीं",
-        "levels": ["कम", "मध्यम", "उच्च", "बहुत उच्च"],
-        "geo_names": ["शांत (G1 से नीचे)", "G1 हल्का", "G2 मध्यम",
-                      "G3 तेज़", "G4 गंभीर", "G5 अत्यधिक"],
-        "sev": ["सब सामान्य", "निगरानी", "चेतावनी", "गंभीर"],
-        "banner_sub": ["किसी व्यवधान की आशंका नहीं", "हल्की गड़बड़ी संभव",
-                       "व्यवधान की संभावना", "गंभीर व्यवधान: तुरंत कदम उठाएँ"],
+        "levels": ["कम", "मध्यम", "ज़्यादा", "बहुत ज़्यादा"],
+        "geo_names": ["शांत (G1 से नीचे)", "G1 हल्का", "G2 मध्यम", "G3 तेज़", "G4 गंभीर", "G5 अत्यधिक"],
+        "sev": ["सब सामान्य", "नज़र रखें", "चेतावनी", "गंभीर"],
+        "banner_sub": ["किसी परेशानी की आशंका नहीं", "हल्की परेशानी हो सकती है", "परेशानी होने की संभावना", "गंभीर परेशानी: तुरंत कदम उठाएँ"],
         "pause": "⛔ रोकें",
         "caution": "⚠️ सावधानी",
         "safe": "✅ सुरक्षित",
         "advice": "सलाह",
-        "local": "स्थान-आधारित चिंता (सरल मॉडल, केवल संकेतात्मक)",
-        "t_r3": "तेज़ HF ब्लैकआउट। सैटेलाइट या वैकल्पिक लिंक पर जाएँ।",
-        "t_r1": "हल्का HF व्यवधान संभव। लिंक की निगरानी करें।",
-        "t_ok": "HF रेडियो में व्यवधान की आशंका नहीं।",
-        "t_kp": "भू-चुंबकीय तूफ़ान: GNSS टाइमिंग कम भरोसेमंद हो सकती है।",
-        "f_pause": "GPS की सटीकता घट सकती है। "
-                   "ऑटो-स्टीयर और सटीक खेती के उपकरण रोकें।",
-        "f_caution": "GPS की सटीकता कम हो सकती है। "
-                     "स्वचालित काम से पहले उपकरण जाँचें।",
-        "f_safe": "GPS सामान्य है। स्वचालित उपकरण सुरक्षित रूप से चलाएँ।",
+        "local": "आपके स्थान के अनुसार चिंता (सरल अनुमान, केवल जानकारी के लिए)",
+        "t_r3": "सूरज की ओर वाले हिस्से में HF रेडियो में गंभीर बाधा हो सकती है। सैटेलाइट या दूसरे संपर्क माध्यम का इस्तेमाल करें।",
+        "t_r1": "HF रेडियो में हल्की या मध्यम बाधा हो सकती है। संपर्क पर नज़र रखें।",
+        "t_ok": "HF रेडियो में बाधा की आशंका नहीं है।",
+        "t_kp": "भू-चुंबकीय तूफ़ान के कारण GNSS समय-संकेत कम भरोसेमंद हो सकते हैं।",
+        "f_pause": "GPS की सटीकता कम हो सकती है। ऑटो-स्टीयर और GPS से चलने वाले खेती के उपकरण रोक दें।",
+        "f_caution": "GPS की सटीकता कम हो सकती है। अपने आप चलने वाले उपकरण इस्तेमाल करने से पहले जाँच लें।",
+        "f_safe": "GPS सामान्य है। अपने आप चलने वाले उपकरण चला सकते हैं।",
         "check": "✅ मुझे क्या करना चाहिए?",
-        "crop_h": "🌾 फसल-आधारित सलाह",
+        "crop_h": "🌾 फसल के अनुसार खेती की सलाह",
         "crop": "फसल",
         "task": "काम",
-        "crop_pause": "⛔ {crop} की {task} में सटीक GPS चाहिए तो उसे टालें। "
-                      "हाथ से करें या अलर्ट खत्म होने का इंतज़ार करें।",
-        "crop_caution": "⚠️ {crop} की {task}: GPS की सटीकता कम हो सकती है। "
-                        "उपकरण जाँचें और हाथ से नियंत्रण तैयार रखें।",
-        "crop_go": "✅ {crop} की {task} के लिए GPS वाले उपकरण चलाने की स्थिति अच्छी है।",
-        "crop_nogps": "ℹ️ {crop} की {task} GPS पर ज़्यादा निर्भर नहीं है, "
-                      "आप जारी रख सकते हैं।",
-        "sms_h": "📱 SMS / WhatsApp अलर्ट",
-        "sms_note": "नीचे का संदेश कॉपी करें या भेजें।",
+        "crop_pause": "⛔ अगर {crop} की {task} में सही GPS ज़रूरी है, तो अभी यह काम टाल दें। हाथ से काम करें या चेतावनी हटने तक इंतज़ार करें।",
+        "crop_caution": "⚠️ {crop} की {task}: GPS कम सटीक हो सकता है। उपकरण जाँचें और ज़रूरत पड़ने पर हाथ से चलाने के लिए तैयार रहें।",
+        "crop_go": "✅ GPS वाले उपकरणों से {crop} की {task} करने के लिए हालात ठीक हैं।",
+        "crop_nogps": "ℹ️ {crop} की {task} में GPS की ज़्यादा ज़रूरत नहीं है, इसलिए आप काम जारी रख सकते हैं।",
+        "sms_h": "📱 SMS / WhatsApp चेतावनी संदेश",
+        "sms_note": "नीचे दिया गया संदेश कॉपी करें या साझा करें।",
         "wa": "WhatsApp पर भेजें",
-        "map": "🗺️ भारत GNSS चिंता मानचित्र",
+        "map": "🗺️ भारत में GNSS समस्या का नक्शा",
         "last24": "पिछले 24 घंटे",
-        "fc": "🔮 पूर्वानुमान",
-        "fc_official": "NOAA का आधिकारिक Kp पूर्वानुमान",
-        "fc_exp": "प्रयोगात्मक 3 घंटे का ट्रेंड (आधिकारिक नहीं)",
-        "fc_note": "यह प्रदर्शन के लिए सरल ट्रेंड अनुमान है, आधिकारिक पूर्वानुमान नहीं।",
-        "fc_storm": "तूफ़ान की संभावना: अगले घंटों में Kp 5 या उससे अधिक हो सकता है।",
-        "fc_ok": "अगले 3 घंटों में बड़े तूफ़ान की आशंका कम है।",
+        "fc": "🔮 अनुमान",
+        "fc_official": "NOAA का आधिकारिक Kp अनुमान",
+        "fc_exp": "प्रयोग के लिए 3 घंटे का रुझान (आधिकारिक नहीं)",
+        "fc_note": "यह प्रदर्शन के लिए बनाया गया सरल अनुमान है, आधिकारिक भविष्यवाणी नहीं।",
+        "fc_storm": "तूफ़ान आ सकता है: अगले कुछ घंटों में Kp 5 या उससे ज़्यादा हो सकता है।",
+        "fc_ok": "अगले 3 घंटों में बड़े तूफ़ान की संभावना कम है।",
         "hour": "घंटा",
         "est": "अनुमानित Kp",
-        "updated": "डेटा अपडेट (UTC)",
-        "stale": "⚠️ कुछ डेटा 30 मिनट से पुराना है। मान पुराने हो सकते हैं।",
-        "sim": "नकली डेटा (डेमो मोड)",
-        "why": "🔎 यह अलर्ट क्यों?",
-        "why_geo": "भू-चुंबकीय: Kp {kp:.1f} → {name}। "
-                   "NOAA G-स्केल: G1 Kp 5 से, G3 Kp 7 से, G5 Kp 9 से शुरू होता है।",
-        "why_radio": "रेडियो: X-रे फ्लक्स {flux:.2e} W/m² → R{r}। "
-                     "NOAA R-स्केल: R1 1e-5 W/m² से शुरू होता है।",
-        "why_night": "रेडियो ब्लैकआउट केवल धूप वाले हिस्से को प्रभावित करता है। "
-                     "भारत में अभी रात है, इसलिए इसे नहीं गिना गया।",
-        "why_local": "{state} के लिए GNSS चिंता: Kp {kp:.1f} × अक्षांश कारक {f:.1f} "
-                     "= {kpl:.1f}। यह सरल मॉडल है, मापी गई GPS त्रुटि नहीं।",
-        "why_farm": "स्थानीय Kp 7 या उससे ऊपर होने पर उपकरण रोके जाते हैं, "
-                    "और 5 से सावधानी की सलाह है।",
-        "hist": "🕘 अलर्ट इतिहास (इस सत्र का)",
-        "hist_empty": "अभी कोई अलर्ट दर्ज नहीं है।",
+        "updated": "डेटा अपडेट हुआ (UTC)",
+        "stale": "⚠️ कुछ डेटा 30 मिनट से पुराना है। मान बदल चुके हो सकते हैं।",
+        "sim": "अनुकरण वाला डेटा (डेमो मोड)",
+        "why": "🔎 यह चेतावनी क्यों?",
+        "why_geo": "भू-चुंबकीय स्थिति: Kp {kp:.1f} → {name}. NOAA के G-स्तर में G1, Kp 5 से; G3, Kp 7 से; और G5, Kp 9 से शुरू होता है।",
+        "why_radio": "रेडियो: X-ray ऊर्जा {flux:.2e} W/m² → R{r}. NOAA का R1 स्तर 1e-5 W/m² से शुरू होता है।",
+        "why_night": "रेडियो बाधा केवल पृथ्वी के सूरज की ओर वाले हिस्से को प्रभावित करती है। भारत में अभी रात है, इसलिए इसे नहीं गिना गया।",
+        "why_local": "{state} के लिए GNSS चिंता: Kp {kp:.1f} × अक्षांश कारक {f:.1f} = {kpl:.1f}. यह सरल अनुमान है, GPS की मापी गई गलती नहीं।",
+        "why_farm": "स्थानीय Kp 7 या उससे ज़्यादा होने पर खेती के उपकरण रोकने की सलाह है। Kp 5 से सावधानी रखें।",
+        "hist": "🕘 इस सत्र में चेतावनी का इतिहास",
+        "hist_empty": "अभी तक कोई चेतावनी दर्ज नहीं हुई है।",
         "h_cols": ["समय (UTC)", "राज्य", "स्तर", "Kp", "रेडियो"],
     },
 }
@@ -339,25 +372,14 @@ CHK = {
     },
     "hi": {
         "telecom": [
-            ["सामान्य संचालन। किसी कार्रवाई की ज़रूरत नहीं।",
-             "डैशबोर्ड पर नज़र रखें।"],
-            ["नेटवर्क ऑपरेशन टीम को सूचित करें।",
-             "HF और टाइमिंग सेवाओं के लिए बैकअप लिंक (सैटेलाइट या फाइबर) तैयार रखें।",
-             "बेस स्टेशनों पर GNSS आधारित टाइम सिंक की जाँच करें।"],
-            ["ज़रूरी ट्रैफ़िक तुरंत सैटेलाइट या फाइबर लिंक पर ले जाएँ।",
-             "धूप वाले हिस्से में HF रेडियो ब्लैकआउट संभव है: "
-             "वैकल्पिक बैंड या रूट इस्तेमाल करें।",
-             "बेस स्टेशन की टाइमिंग बैकअप स्रोत पर ले जाएँ।"],
+            ["सामान्य स्थिति है। किसी कार्रवाई की ज़रूरत नहीं है।", "डैशबोर्ड पर नज़र रखें।"],
+            ["नेटवर्क संचालन टीम को सूचना दें।", "HF और समय-संकेत सेवाओं के लिए सैटेलाइट या फाइबर जैसे बैकअप संपर्क तैयार रखें।", "बेस स्टेशन पर GNSS से मिलने वाले समय की जाँच करें।"],
+            ["ज़रूरी नेटवर्क ट्रैफ़िक को तुरंत सैटेलाइट या फाइबर पर भेजें।", "सूरज की ओर वाले हिस्से में HF रेडियो बाधित हो सकता है; दूसरे बैंड या रास्ते इस्तेमाल करें।", "बेस स्टेशन का समय बैकअप स्रोत से लें।"],
         ],
         "farmer": [
-            ["GPS सामान्य है। स्वचालित उपकरण योजना के अनुसार चलाएँ।",
-             "लंबे स्वचालित काम से पहले जाँच करते रहें।"],
-            ["ऑटो-स्टीयर चलाने से पहले GPS की सटीकता जाँचें।",
-             "बुवाई और छिड़काव जैसे सटीक काम अतिरिक्त सावधानी से करें।",
-             "हाथ से नियंत्रण लेने के लिए एक व्यक्ति तैयार रखें।"],
-            ["ऑटो-स्टीयर और GPS वाली मशीनें रोकें।",
-             "हाथ से चलाएँ या सटीक काम टाल दें।",
-             "अलर्ट खत्म होने तक रुकें, फिर दोबारा चलाने से पहले कैलिब्रेट करें।"],
+            ["GPS सामान्य है। खेती के स्वचालित उपकरण योजना के अनुसार चलाएँ।", "लंबे समय तक अपने आप चलने वाले काम से पहले जाँच करते रहें।"],
+            ["ऑटो-स्टीयर इस्तेमाल करने से पहले GPS की सटीकता जाँचें।", "बुआई और छिड़काव जैसे सटीक काम सावधानी से करें।", "ज़रूरत पड़ने पर मशीन हाथ से चलाने के लिए किसी व्यक्ति को तैयार रखें।"],
+            ["ऑटो-स्टीयर और GPS से चलने वाली मशीनें रोक दें।", "मशीन हाथ से चलाएँ या सटीक काम कुछ समय के लिए टाल दें।", "चेतावनी हटने तक रुकें। दोबारा शुरू करने से पहले मशीन की सेटिंग जाँचें।"],
         ],
     },
 }
@@ -372,12 +394,9 @@ SMS = {
         "PAUSE GPS-guided equipment and use manual mode.",
     ],
     "hi": [
-        "{s} में अंतरिक्ष मौसम सामान्य है। GPS और रेडियो ठीक हैं। "
-        "खेती के उपकरण सुरक्षित रूप से चलाएँ।",
-        "{s} में अंतरिक्ष मौसम चेतावनी: GPS की सटीकता कम हो सकती है। "
-        "ऑटो-स्टीयर चलाने से पहले जाँच लें।",
-        "{s} में अंतरिक्ष मौसम अलर्ट: गंभीर गड़बड़ी। "
-        "GPS वाले उपकरण रोकें और हाथ से (मैनुअल) चलाएँ।",
+        "{s} में अंतरिक्ष मौसम सामान्य है। GPS और रेडियो ठीक हैं। खेती के उपकरण सुरक्षित रूप से चला सकते हैं।",
+        "{s} में अंतरिक्ष मौसम की चेतावनी: GPS की सटीकता कम हो सकती है। ऑटो-स्टीयर इस्तेमाल करने से पहले जाँच लें।",
+        "{s} में अंतरिक्ष मौसम की गंभीर चेतावनी है। GPS से चलने वाले उपकरण रोक दें और मशीन हाथ से चलाएँ।",
     ],
 }
 
@@ -413,7 +432,7 @@ CROPS = {
     "maize": ("Maize", "मक्का"),
 }
 TASKS = {
-    "sowing": ("Sowing", "बुवाई", 2),
+    "sowing": ("Sowing", "बुआई", 2),
     "spraying": ("Spraying", "छिड़काव", 2),
     "ploughing": ("Ploughing", "जुताई", 1),
     "harvesting": ("Harvesting", "कटाई", 1),
@@ -624,7 +643,7 @@ def g_label(v):
 
 
 # ---------- Sidebar ----------
-lang_choice = st.sidebar.radio("Language / भाषा", ["English", "हिन्दी"])
+lang_choice = st.sidebar.radio("LANGUAGE", ["English", "Hindi"], horizontal=True)
 lk = "en" if lang_choice == "English" else "hi"
 li = 0 if lk == "en" else 1
 t = TXT[lk]
@@ -637,8 +656,9 @@ st.markdown(
 st.title(t["title"])
 st.caption(t["caption"])
 
+st.sidebar.markdown("<div class=\"mission-kicker\"><span class=\"mission-dot\"></span>MISSION CONTROLS</div>", unsafe_allow_html=True)
 st.sidebar.header(t["settings"])
-view = st.sidebar.radio(t["view"], [0, 1], format_func=lambda i: t["views"][i])
+view = st.sidebar.radio(t["view"], [0, 1], format_func=lambda i: t["views"][i], horizontal=True)
 state = st.sidebar.selectbox(
     t["state"], list(STATES.keys()), index=list(STATES).index("Uttar Pradesh")
 )
@@ -957,7 +977,7 @@ if view == 1:
 # ---------- SMS / WhatsApp alert ----------
 st.subheader(t["sms_h"])
 st.caption(t["sms_note"])
-tab_hi, tab_en = st.tabs(["हिन्दी", "English"])
+tab_hi, tab_en = st.tabs(["Hindi", "English"])
 for tab, key in ((tab_hi, "hi"), (tab_en, "en")):
     with tab:
         msg = SMS[key][tier].format(s=state)
