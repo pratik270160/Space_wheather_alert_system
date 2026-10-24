@@ -196,6 +196,106 @@ hr {
     *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
         transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Cinematic glass + 3D motion layer for the whole dashboard */
+:root { --glass-edge: rgba(119, 222, 255, .27); }
+[data-testid="stAppViewContainer"] { perspective: 1400px; }
+[data-testid="stMetric"] {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: linear-gradient(145deg, rgba(21,48,73,.88), rgba(8,20,36,.94)) !important;
+  border: 1px solid rgba(112,210,244,.28) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), inset 0 -12px 24px rgba(0,0,0,.13), 0 10px 24px rgba(0,0,0,.18), 0 0 0 1px rgba(66,190,235,.035) !important;
+  transform: translateZ(0); animation: metric-arrive .65s cubic-bezier(.2,.8,.2,1) both;
+}
+[data-testid="stMetric"]:before {
+  content:""; position:absolute; inset:-1px; z-index:-1; pointer-events:none;
+  background: linear-gradient(115deg, transparent 15%, rgba(111,235,255,.10) 45%, transparent 72%);
+  transform: translateX(-120%); animation: glass-sweep 7s ease-in-out infinite;
+}
+[data-testid="stMetric"]:after {
+  content:""; position:absolute; left:14px; right:14px; top:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(155,244,255,.72),transparent); opacity:.8;
+}
+[data-testid="stMetric"]:hover { transform: translateY(-5px) rotateX(2deg); border-color:rgba(85,230,242,.72)!important; box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 18px 38px rgba(0,0,0,.28),0 0 25px rgba(41,202,232,.10)!important; }
+[data-testid="stExpander"] {
+  position:relative; overflow:hidden; border:1px solid rgba(99,202,239,.27)!important;
+  border-radius:19px!important; background:linear-gradient(145deg,rgba(13,31,51,.83),rgba(7,18,33,.87))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 12px 32px rgba(0,0,0,.15)!important;
+  transition:border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+}
+[data-testid="stExpander"]:hover { border-color:rgba(85,230,242,.52)!important; box-shadow:0 14px 34px rgba(0,0,0,.2),0 0 24px rgba(53,180,220,.06)!important; }
+[data-testid="stAlert"] { border-radius:15px!important; border:1px solid rgba(130,207,244,.25)!important; box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 8px 20px rgba(0,0,0,.12); animation:panel-rise .45s ease both; }
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] { box-shadow:0 0 0 5px rgba(85,230,242,.10),0 0 18px rgba(85,230,242,.30); transition:box-shadow .2s ease,transform .2s ease; }
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]:hover { transform:scale(1.12); box-shadow:0 0 0 7px rgba(85,230,242,.12),0 0 24px rgba(85,230,242,.42); }
+[data-testid="stDataFrame"], [data-testid="stTable"] { box-shadow:0 12px 26px rgba(0,0,0,.16); }
+[data-testid="stPlotlyChart"] { box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 12px 28px rgba(0,0,0,.14)!important; transition:transform .25s ease,border-color .25s ease; }
+[data-testid="stPlotlyChart"]:hover { transform:translateY(-2px); border-color:rgba(85,230,242,.35)!important; }
+.stMarkdown h2, .stMarkdown h3 { text-shadow:0 0 24px rgba(85,230,242,.08); }
+@keyframes metric-arrive { from { opacity:0; transform:translateY(9px) rotateX(-3deg); } to { opacity:1; transform:translateY(0) rotateX(0); } }
+@keyframes glass-sweep { 0%,65%,100% { transform:translateX(-120%); } 82% { transform:translateX(120%); } }
+@keyframes panel-rise { from { opacity:.65; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+/* A floating, dimensional simulator viewport with depth layers */
+.sim-scene {
+  transform-style:preserve-3d; border:1px solid rgba(106,226,255,.42)!important;
+  background:radial-gradient(ellipse at 50% 120%,rgba(32,95,151,.28),transparent 48%),radial-gradient(ellipse at 78% 22%,rgba(131,82,255,.16),transparent 34%),linear-gradient(135deg,#050d1b 0%,#0b2038 48%,#100f2c 100%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),inset 0 -25px 55px rgba(0,0,0,.24),0 18px 45px rgba(0,0,0,.25),0 0 35px rgba(53,198,235,.07)!important;
+  animation:scene-hover 8s ease-in-out infinite;
+}
+.sim-scene:before { content:"";position:absolute;inset:0;pointer-events:none;opacity:.24;background-image:radial-gradient(1px 1px at 8% 20%,#d8f6ff 99%,transparent),radial-gradient(1px 1px at 42% 13%,#d8f6ff 99%,transparent),radial-gradient(1px 1px at 67% 32%,#d8f6ff 99%,transparent),radial-gradient(1px 1px at 92% 63%,#d8f6ff 99%,transparent),radial-gradient(1px 1px at 30% 72%,#d8f6ff 99%,transparent);background-size:190px 130px;animation:star-drift 22s linear infinite; }
+.sim-topline,.sim-scene-footer { position:relative;z-index:2;text-shadow:0 0 12px rgba(85,230,242,.2); }
+.sim-sun { filter:drop-shadow(0 0 8px rgba(255,132,56,.3)); }
+.sim-earth { box-shadow:inset -12px -8px 16px rgba(0,0,0,.52),inset 5px 3px 8px rgba(255,255,255,.24),0 0 24px rgba(46,165,255,.42)!important; }
+.sim-field { filter:drop-shadow(0 0 4px rgba(85,230,242,.5)); }
+.sim-solar-stream { filter:drop-shadow(0 0 7px rgba(255,160,86,.5)); }
+@keyframes scene-hover { 0%,100% { transform:perspective(1000px) rotateX(0deg) translateY(0); } 50% { transform:perspective(1000px) rotateX(.6deg) translateY(-2px); } }
+@keyframes star-drift { from { background-position:0 0; } to { background-position:190px 130px; } }
+@media (prefers-reduced-motion:reduce) { [data-testid="stMetric"],.sim-scene:before,.sim-scene { animation:none!important; } }
+
+/* Space-weather simulator: animated visual stage */
+.sim-scene {
+  --flare-intensity: .4;
+  --field-opacity: .4;
+  --flare-width: 116px;
+  --flare-height: 25px;
+  --sun-glow: 30px;
+  --sun-glow-wide: 50px;
+  --stream-scale: .7;
+  position: relative; overflow: hidden; margin: .65rem 0 1rem;
+  min-height: 255px; border-radius: 20px;
+  border: 1px solid rgba(85,230,242,.28);
+  background: radial-gradient(ellipse at 75% 48%, rgba(26,73,111,.35), transparent 42%),
+              radial-gradient(ellipse at 15% 35%, rgba(117,45,71,.22), transparent 32%),
+              linear-gradient(125deg,#07111f 0%,#0a1930 55%,#10152f 100%);
+  box-shadow: inset 0 0 45px rgba(25,108,157,.10), 0 12px 35px rgba(0,0,0,.18);
+}
+.sim-topline,.sim-scene-footer { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:13px 16px; color:#9fc4dc; font-size:.68rem; font-weight:800; letter-spacing:.12em; }
+.sim-topline span:first-child { color:#55e6f2; }
+.sim-cosmos { position:relative; height:170px; overflow:hidden; }
+.sim-sun { position:absolute; left:9%; top:40px; width:68px; height:68px; border-radius:50%; background:radial-gradient(circle at 34% 30%,#fff8c4 0%,#ffd166 20%,#ff8a36 54%,#e94b26 78%,#8b1e32 100%); box-shadow:0 0 var(--sun-glow) rgba(255,125,50,.6),0 0 var(--sun-glow-wide) rgba(255,87,34,.25); animation:sim-sun-pulse 3s ease-in-out infinite; }
+.sim-sun-core { position:absolute; inset:-8px; border:1px solid rgba(255,187,95,.35); border-radius:50%; animation:sim-sun-ring 4s linear infinite; }
+.sim-flare { position:absolute; width:var(--flare-width); height:var(--flare-height); left:48px; top:12px; transform:rotate(-19deg); transform-origin:left center; border-radius:100%; background:linear-gradient(90deg,rgba(255,213,116,.9),rgba(255,111,55,.55),transparent); filter:blur(2px); animation:sim-flare-wave 2.4s ease-in-out infinite; }
+.sim-solar-stream { position:absolute; left:18%; top:67px; width:50%; height:32px; background:linear-gradient(90deg,rgba(255,148,61,.35),rgba(255,116,65,.14),transparent); clip-path:polygon(0 25%,100% 0,100% 100%,0 75%); filter:blur(4px); transform:scaleX(var(--stream-scale)); transform-origin:left center; animation:sim-stream 3.2s ease-in-out infinite; }
+.sim-earth-system { position:absolute; right:13%; top:40px; width:100px; height:100px; display:flex; align-items:center; justify-content:center; }
+.sim-earth { position:relative; z-index:2; width:68px; height:68px; border-radius:50%; overflow:hidden; background:radial-gradient(circle at 30% 28%,#7ce8ff 0%,#277bb4 30%,#123d78 68%,#07152e 100%); box-shadow:0 0 22px rgba(71,190,255,.48),inset -9px -4px 15px rgba(0,0,0,.55); }
+.sim-earth:before { content:""; position:absolute; inset:-20%; background:repeating-linear-gradient(115deg,transparent 0 9px,rgba(95,220,166,.72) 10px 15px,transparent 16px 24px); opacity:.55; animation:sim-earth-turn 8s linear infinite; }
+.sim-earth-shine { position:absolute; inset:0; border-radius:50%; border-left:2px solid rgba(190,246,255,.85); }
+.sim-field { position:absolute; border:1.5px solid rgba(85,230,242,var(--field-opacity)); border-radius:50%; width:140px; height:76px; box-shadow:0 0 9px rgba(85,230,242,.18); animation:sim-field-breathe 4s ease-in-out infinite; }
+.sim-field.field-a { transform:rotate(0deg) scaleY(1); }
+.sim-field.field-b { width:158px; height:94px; transform:rotate(48deg); animation-delay:-1.2s; }
+.sim-field.field-c { width:158px; height:94px; transform:rotate(-48deg); animation-delay:-2.1s; }
+.sim-scene-footer { border-top:1px solid rgba(112,171,220,.13); color:#d5e9f6; letter-spacing:.04em; }
+.sim-scene-footer b { color:#55e6f2; }
+.sim-note { border:1px solid rgba(85,230,242,.22); border-left:3px solid #55e6f2; background:rgba(13,31,49,.72); padding:12px 14px; border-radius:10px; color:#c7dced; font-size:.9rem; }
+.sim-result-label { color:#9fb4ca; font-size:.76rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; }
+@keyframes sim-sun-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.045)} }
+@keyframes sim-sun-ring { 0%{transform:scale(.92);opacity:.8} 100%{transform:scale(1.45);opacity:0} }
+@keyframes sim-flare-wave { 0%,100%{opacity:.55;transform:rotate(-19deg) scaleX(.85)} 50%{opacity:1;transform:rotate(-14deg) scaleX(1.12)} }
+@keyframes sim-stream { 0%,100%{opacity:.45} 50%{opacity:.9} }
+@keyframes sim-earth-turn { from{transform:translateX(-8px)} to{transform:translateX(8px)} }
+@keyframes sim-field-breathe { 0%,100%{opacity:.6;filter:brightness(.9)} 50%{opacity:1;filter:brightness(1.45)} }
+@media (prefers-reduced-motion: reduce) { .sim-sun,.sim-sun-core,.sim-flare,.sim-solar-stream,.sim-earth:before,.sim-field { animation:none !important; } }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -664,6 +764,238 @@ state = st.sidebar.selectbox(
 )
 demo = st.sidebar.checkbox(t["demo"])
 
+# ---------- Interactive Space Weather Mission Simulator ----------
+SIM_TXT = {
+    "en": {
+        "title": "🧪 SPACE WEATHER MISSION SIMULATOR",
+        "caption": "Change the controls to test a hypothetical solar flare and geomagnetic disturbance. This sandbox does not change the live dashboard or send alerts.",
+        "flux": "Solar X-ray flux (log₁₀ exponent)",
+        "flux_help": "Choose a simulated X-ray flux. The scale is logarithmic because flux values span many orders of magnitude.",
+        "kp": "Geomagnetic disturbance (Kp index)",
+        "kp_help": "Kp is a geomagnetic activity index from 0 to 9; it is not a direct magnetic-field strength measurement in nT.",
+        "visual": "SIMULATION ACTIVE",
+        "hypothetical": "HYPOTHETICAL CONDITIONS",
+        "flux_unit": "Simulated flux",
+        "kp_note": "0 = quiet · 5 = G1 threshold · 9 = extreme Kp value",
+        "xray_footer": "X-RAY FLUX",
+        "kp_footer": "GEOMAGNETIC Kp",
+        "selected": "Selected scenario",
+        "baseline_note": "Simulator baseline: X-ray flux 1e-6 W/m² and Kp 2.0. Values are separate from live NOAA data; no alerts are sent.",
+        "flux_delta": "orders of magnitude vs baseline",
+        "flux_axis": "X-ray flux (W/m²)",
+        "radio_axis": "App radio-risk level",
+        "kp_axis": "Kp index",
+        "geo_axis": "Geomagnetic category index",
+        "flux_metric": "Simulated X-ray flux",
+        "radio_metric": "Radio-risk level (app rules)",
+        "kp_metric": "Simulated Kp",
+        "geo_metric": "Geomagnetic category",
+        "gnss_metric": "GNSS concern (simplified)",
+        "comparison": "BASELINE VS YOUR SCENARIO",
+        "metric": "Indicator",
+        "baseline": "Baseline",
+        "scenario": "Your scenario",
+        "xrayrow": "Solar X-ray flux",
+        "radiorow": "Radio-risk category",
+        "kprow": "Geomagnetic activity (Kp)",
+        "georow": "Geomagnetic category",
+        "localrow": "Simplified local Kp estimate",
+        "gnssrow": "GNSS concern category",
+        "radio_chart": "How X-ray flux changes the app's radio-risk category",
+        "geo_chart": "How Kp changes the geomagnetic category",
+        "recommendation": "WHAT WOULD THE APP RECOMMEND?",
+        "warning": "SIMULATION ONLY — these are hypothetical inputs and rule-based estimates, not live NOAA readings, measured GPS errors, or an official warning.",
+        "radio_high": "High simulated X-ray flux: the app's rules indicate a stronger HF radio-blackout concern. Telecom operators should review alternate communication paths.",
+        "radio_mid": "Elevated simulated X-ray flux: monitor HF radio conditions and communication links.",
+        "radio_low": "The selected simulated X-ray flux is below this app's radio-risk thresholds.",
+        "geo_high": "Strong simulated geomagnetic disturbance: review GNSS-based timing and navigation dependencies.",
+        "geo_mid": "Some geomagnetic activity is simulated: monitor GNSS performance and keep backup procedures available.",
+        "geo_low": "The selected Kp-like value is below the app's G1 threshold.",
+        "farmer_high": "Farmer view: for GPS-dependent precision work, verify receiver accuracy and keep manual control available. This simulation alone cannot determine whether a real machine is safe.",
+        "farmer_mid": "Farmer view: check GPS accuracy before precision work and be ready to switch to manual control.",
+        "farmer_low": "Farmer view: no elevated concern is indicated by these simulated rules; follow normal equipment checks.",
+        "telecom": "Telecom view: check alternate links and backup timing procedures according to your network's operational policy.",
+    },
+    "hi": {
+        "title": "🧪 अंतरिक्ष मौसम मिशन सिम्युलेटर",
+        "caption": "काल्पनिक सौर फ्लेयर और भू-चुंबकीय गड़बड़ी देखने के लिए स्लाइडर बदलें। यह सिमुलेशन लाइव डैशबोर्ड को नहीं बदलता और कोई अलर्ट नहीं भेजता।",
+        "flux": "सौर X-ray फ्लक्स (log₁₀ घातांक)",
+        "flux_help": "काल्पनिक X-ray फ्लक्स चुनें। मान बहुत अलग-अलग स्तरों पर होते हैं, इसलिए विकल्प क्रमिक पैमाने पर हैं।",
+        "kp": "भू-चुंबकीय गतिविधि (Kp सूचकांक)",
+        "kp_help": "Kp 0 से 9 तक भू-चुंबकीय गतिविधि का सूचकांक है। यह nT में सीधे चुंबकीय क्षेत्र की ताकत नहीं है।",
+        "visual": "सिमुलेशन चालू",
+        "hypothetical": "काल्पनिक स्थिति",
+        "flux_unit": "काल्पनिक फ्लक्स",
+        "kp_note": "0 = शांत · 5 = G1 सीमा · 9 = अत्यधिक Kp मान",
+        "xray_footer": "X-RAY फ्लक्स",
+        "kp_footer": "भू-चुंबकीय Kp",
+        "selected": "चुनी गई स्थिति",
+        "baseline_note": "सिमुलेशन का सामान्य आधार: X-ray फ्लक्स 1e-6 W/m² और Kp 2.0। ये मान लाइव NOAA डेटा से अलग हैं; कोई अलर्ट नहीं भेजा जाता।",
+        "flux_delta": "सामान्य आधार से परिमाण का अंतर",
+        "flux_axis": "X-ray फ्लक्स (W/m²)",
+        "radio_axis": "ऐप का रेडियो जोखिम स्तर",
+        "kp_axis": "Kp सूचकांक",
+        "geo_axis": "भू-चुंबकीय श्रेणी सूचकांक",
+        "flux_metric": "काल्पनिक X-ray फ्लक्स",
+        "radio_metric": "रेडियो जोखिम स्तर (ऐप के नियम)",
+        "kp_metric": "काल्पनिक Kp",
+        "geo_metric": "भू-चुंबकीय श्रेणी",
+        "gnss_metric": "GNSS चिंता (सरल अनुमान)",
+        "comparison": "सामान्य स्थिति बनाम आपका सिमुलेशन",
+        "metric": "संकेतक",
+        "baseline": "सामान्य आधार",
+        "scenario": "आपकी स्थिति",
+        "xrayrow": "सौर X-ray फ्लक्स",
+        "radiorow": "रेडियो जोखिम श्रेणी",
+        "kprow": "भू-चुंबकीय गतिविधि (Kp)",
+        "georow": "भू-चुंबकीय श्रेणी",
+        "localrow": "सरल स्थानीय Kp अनुमान",
+        "gnssrow": "GNSS चिंता श्रेणी",
+        "radio_chart": "X-ray फ्लक्स बदलने पर रेडियो जोखिम कैसे बदलता है",
+        "geo_chart": "Kp बदलने पर भू-चुंबकीय श्रेणी कैसे बदलती है",
+        "recommendation": "ऐप क्या सलाह देगा?",
+        "warning": "केवल सिमुलेशन — ये काल्पनिक मान और नियम-आधारित अनुमान हैं, लाइव NOAA माप, वास्तविक GPS त्रुटि या आधिकारिक चेतावनी नहीं।",
+        "radio_high": "काल्पनिक X-ray फ्लक्स अधिक है: ऐप के नियमों में HF रेडियो व्यवधान की चिंता बढ़ती है। दूरसंचार टीम वैकल्पिक संचार मार्ग जाँचे।",
+        "radio_mid": "काल्पनिक X-ray फ्लक्स बढ़ा हुआ है: HF रेडियो स्थिति और संचार लिंक पर नज़र रखें।",
+        "radio_low": "चुना गया काल्पनिक X-ray फ्लक्स इस ऐप की रेडियो जोखिम सीमाओं से नीचे है।",
+        "geo_high": "काल्पनिक भू-चुंबकीय गड़बड़ी तेज़ है: GNSS आधारित समय और नेविगेशन की निर्भरता जाँचें।",
+        "geo_mid": "कुछ भू-चुंबकीय गतिविधि दिखाई गई है: GNSS प्रदर्शन पर नज़र रखें और बैकअप प्रक्रिया तैयार रखें।",
+        "geo_low": "चुना गया Kp मान ऐप की G1 सीमा से नीचे है।",
+        "farmer_high": "किसान मोड: GPS पर निर्भर सटीक काम से पहले रिसीवर की सटीकता जाँचें और मशीन को हाथ से चलाने की तैयारी रखें। केवल यह सिमुलेशन असली मशीन की सुरक्षा तय नहीं कर सकता।",
+        "farmer_mid": "किसान मोड: सटीक खेती के काम से पहले GPS जाँचें और हाथ से नियंत्रण के लिए तैयार रहें।",
+        "farmer_low": "किसान मोड: इन काल्पनिक नियमों से बढ़ी हुई चिंता नहीं दिखती। सामान्य उपकरण जाँच जारी रखें।",
+        "telecom": "दूरसंचार मोड: अपने नेटवर्क की प्रक्रिया के अनुसार वैकल्पिक लिंक और बैकअप टाइमिंग जाँचें।",
+    }
+}
+_sim = SIM_TXT[lk]
+
+with st.expander(_sim["title"], expanded=True):
+    st.caption(_sim["caption"])
+    st.markdown(
+        '<div class="sim-note">⚠️ ' + _sim["warning"] + '</div>',
+        unsafe_allow_html=True,
+    )
+
+    sim_left, sim_right = st.columns([1, 1], gap="large")
+    with sim_left:
+        sim_log_flux = st.slider(
+            _sim["flux"], min_value=-8.0, max_value=-2.0, value=-6.0,
+            step=0.1, format="%.1f", help=_sim["flux_help"],
+            key="mission_sim_xray_log",
+        )
+        sim_flux = 10.0 ** float(sim_log_flux)
+        st.caption(f"{_sim['flux_unit']}: {sim_flux:.2e} W/m²")
+    with sim_right:
+        sim_kp = st.slider(
+            _sim["kp"], min_value=0.0, max_value=9.0, value=2.0,
+            step=0.5, help=_sim["kp_help"], key="mission_sim_kp",
+        )
+        st.caption(_sim["kp_note"])
+
+    sim_lat, sim_lon = STATES[state]
+    sim_factor = lat_factor(sim_lat)
+    sim_local_kp = sim_kp * sim_factor
+    sim_radio = radio_level(float(sim_flux))
+    sim_geo = geo_idx(float(sim_kp))
+    sim_gnss = gnss_idx(float(sim_local_kp))
+    sim_base_flux = 1e-6
+    sim_base_kp = 2.0
+    sim_base_radio = radio_level(sim_base_flux)
+    sim_base_geo = geo_idx(sim_base_kp)
+    sim_base_local = sim_base_kp * sim_factor
+    sim_base_gnss = gnss_idx(sim_base_local)
+    flare_intensity = max(0.0, min(1.0, (np.log10(float(sim_flux)) + 8.0) / 6.0))
+    field_opacity = 0.22 + (float(sim_kp) / 9.0) * 0.72
+    flare_width = 80.0 + 90.0 * flare_intensity
+    flare_height = 18.0 + 18.0 * flare_intensity
+    sun_glow = 15.0 + 36.0 * flare_intensity
+    sun_glow_wide = 25.0 + 55.0 * flare_intensity
+    stream_scale = 0.5 + flare_intensity
+
+    st.markdown(
+        f'''<div class="sim-scene" style="--flare-intensity:{flare_intensity:.3f};--field-opacity:{field_opacity:.3f};--flare-width:{flare_width:.1f}px;--flare-height:{flare_height:.1f}px;--sun-glow:{sun_glow:.1f}px;--sun-glow-wide:{sun_glow_wide:.1f}px;--stream-scale:{stream_scale:.3f};">
+          <div class="sim-topline"><span>● {_sim["visual"]}</span><span>{_sim["hypothetical"]}</span></div>
+          <div class="sim-cosmos">
+            <div class="sim-sun"><div class="sim-sun-core"></div><div class="sim-flare"></div></div>
+            <div class="sim-solar-stream"></div>
+            <div class="sim-earth-system"><div class="sim-field field-a"></div><div class="sim-field field-b"></div><div class="sim-field field-c"></div><div class="sim-earth"><div class="sim-earth-shine"></div></div></div>
+          </div>
+          <div class="sim-scene-footer"><span>☀ {_sim["xray_footer"]}: <b>{float(sim_flux):.2e} W/m²</b></span><span>◉ {_sim["kp_footer"]}: <b>{float(sim_kp):.1f} / 9</b></span></div>
+        </div>''',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("#### " + _sim["comparison"])
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric(_sim["flux_metric"], f"{float(sim_flux):.2e} W/m²", f"{np.log10(float(sim_flux) / sim_base_flux):+.1f} {_sim['flux_delta']}")
+    m2.metric(_sim["radio_metric"], f"R{sim_radio}", f"{_sim['baseline']} R{sim_base_radio}", delta_color="off")
+    m3.metric(_sim["geo_metric"], g_label(sim_kp), f"Kp {sim_kp:.1f} · {_sim['baseline']} {g_label(sim_base_kp)}", delta_color="off")
+    m4.metric(_sim["gnss_metric"], t["levels"][sim_gnss], f"{_sim['localrow']}: {sim_local_kp:.1f}", delta_color="off")
+
+    sim_table = pd.DataFrame([
+        {_sim["metric"]: _sim["xrayrow"], _sim["baseline"]: f"{sim_base_flux:.1e} W/m²", _sim["scenario"]: f"{float(sim_flux):.1e} W/m²"},
+        {_sim["metric"]: _sim["radiorow"], _sim["baseline"]: f"R{sim_base_radio}", _sim["scenario"]: f"R{sim_radio}"},
+        {_sim["metric"]: _sim["kprow"], _sim["baseline"]: f"{sim_base_kp:.1f}", _sim["scenario"]: f"{float(sim_kp):.1f}"},
+        {_sim["metric"]: _sim["georow"], _sim["baseline"]: g_label(sim_base_kp), _sim["scenario"]: g_label(sim_kp)},
+        {_sim["metric"]: _sim["localrow"], _sim["baseline"]: f"{sim_base_local:.1f}", _sim["scenario"]: f"{sim_local_kp:.1f}"},
+        {_sim["metric"]: _sim["gnssrow"], _sim["baseline"]: t["levels"][sim_base_gnss], _sim["scenario"]: t["levels"][sim_gnss]},
+    ])
+    st.dataframe(sim_table, hide_index=True, width="stretch")
+
+    chart_left, chart_right = st.columns(2, gap="large")
+    flux_curve = np.logspace(-8, -2, 100)
+    radio_curve_df = pd.DataFrame({
+        _sim["flux_axis"]: flux_curve,
+        _sim["radio_axis"]: [radio_level(float(value)) for value in flux_curve],
+    })
+    radio_fig = px.line(radio_curve_df, x=_sim["flux_axis"], y=_sim["radio_axis"], log_x=True, title=_sim["radio_chart"])
+    radio_fig.add_scatter(x=[float(sim_flux)], y=[sim_radio], mode="markers", name=_sim["selected"], marker={"size": 12, "color": "#ff9b54"})
+    radio_fig.update_yaxes(dtick=1, range=[-0.2, 5.3])
+    radio_fig.update_layout(margin=dict(l=8, r=8, t=55, b=8), height=310)
+    chart_left.plotly_chart(radio_fig, use_container_width=True, key="mission_sim_radio_curve")
+
+    kp_curve = np.arange(0, 9.01, 0.25)
+    geo_curve_df = pd.DataFrame({
+        _sim["kp_axis"]: kp_curve,
+        _sim["geo_axis"]: [geo_idx(float(value)) for value in kp_curve],
+    })
+    geo_fig = px.line(geo_curve_df, x=_sim["kp_axis"], y=_sim["geo_axis"], title=_sim["geo_chart"])
+    geo_fig.add_scatter(x=[float(sim_kp)], y=[sim_geo], mode="markers", name=_sim["selected"], marker={"size": 12, "color": "#55e6f2"})
+    geo_fig.update_xaxes(dtick=1, range=[0, 9])
+    geo_fig.update_yaxes(dtick=1, range=[-0.2, 5.3])
+    geo_fig.update_layout(margin=dict(l=8, r=8, t=55, b=8), height=310)
+    chart_right.plotly_chart(geo_fig, use_container_width=True, key="mission_sim_geo_curve")
+
+    st.markdown("#### " + _sim["recommendation"])
+    if sim_radio >= 3:
+        st.warning(_sim["radio_high"])
+    elif sim_radio >= 1:
+        st.info(_sim["radio_mid"])
+    else:
+        st.success(_sim["radio_low"])
+
+    if sim_local_kp >= 5:
+        st.warning(_sim["geo_high"])
+    elif sim_local_kp >= 3:
+        st.info(_sim["geo_mid"])
+    else:
+        st.success(_sim["geo_low"])
+
+    if view == 1:
+        if sim_local_kp >= 7:
+            st.error(_sim["farmer_high"])
+        elif sim_local_kp >= 5:
+            st.warning(_sim["farmer_mid"])
+        else:
+            st.success(_sim["farmer_low"])
+    else:
+        st.info(_sim["telecom"])
+
+    st.caption(_sim["baseline_note"])
+
+# ---------- End interactive simulator ----------
+
+
 # ---------- Simulated IoT Monitoring Module ----------
 
 iot_enabled = st.sidebar.checkbox(
@@ -846,6 +1178,81 @@ caution = kp_loc >= 5
 r_sev = {0: 0, 1: 1, 2: 1, 3: 2, 4: 3, 5: 3}[r_loc]
 sev = max(c_idx, r_sev)
 tier = 2 if (pause or sev >= 3) else (1 if sev >= 1 else 0)
+
+# ---------- AI PREDICTION CENTER · HISTORICAL NOAA MODEL ----------
+st.markdown("""
+<style>
+.ai-hero{position:relative;overflow:hidden;border:1px solid rgba(124,110,255,.35);border-radius:22px;padding:24px 26px;margin:18px 0 22px;background:radial-gradient(circle at 85% 20%,rgba(78,91,255,.25),transparent 32%),linear-gradient(120deg,rgba(12,24,47,.98),rgba(28,18,57,.94));box-shadow:0 18px 50px rgba(0,0,0,.22)}
+.ai-hero:after{content:"";position:absolute;width:230px;height:230px;right:-55px;top:-115px;border:1px solid rgba(121,210,255,.26);border-radius:50%;box-shadow:0 0 0 22px rgba(121,210,255,.035),0 0 0 48px rgba(121,210,255,.025);animation:orbitPulse 7s ease-in-out infinite}
+.ai-kicker{font-size:11px;letter-spacing:.19em;font-weight:800;color:#a5b4fc}.ai-title{font-size:clamp(24px,3vw,38px);font-weight:850;line-height:1.1;margin:8px 0;color:#f2f5ff}.ai-copy{color:#b9c6e8;max-width:850px;font-size:14px}.ai-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#61f4c0;box-shadow:0 0 14px #61f4c0;margin-right:8px;animation:livePulse 1.8s infinite}
+@keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live{animation:none}}
+</style>
+<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · DATA-DRIVEN OUTLOOK</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A transparent machine-learning experiment trained on recent official NOAA planetary Kp observations. The model learns from historical sequences and estimates Kp about one hour ahead. This is an experimental model output—not an official NOAA forecast or operational warning.</div></div>
+""", unsafe_allow_html=True)
+
+with st.expander("🧠 Explore the ML forecast, validation and data provenance", expanded=True):
+    st.caption("SOURCE: NOAA Space Weather Prediction Center · planetary_k_index_1m.json · observations are cached for 15 minutes. Only downloaded observations are used; no synthetic training rows are created.")
+    try:
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+        ml_kp = get_kp().copy().sort_values("time_tag").drop_duplicates("time_tag")
+        ml_kp["estimated_kp"] = pd.to_numeric(ml_kp["estimated_kp"], errors="coerce")
+        ml_kp = ml_kp.dropna(subset=["estimated_kp"])
+        # The SWPC feed is sampled at short intervals. Predict the Kp value
+        # approximately one hour later using only earlier measurements.
+        lag_steps = [1, 5, 15, 30, 60]
+        ml_data = ml_kp[["time_tag", "estimated_kp"]].copy()
+        for lag in lag_steps:
+            ml_data[f"kp_lag_{lag}"] = ml_data["estimated_kp"].shift(lag)
+        ml_data["target_kp_60m"] = ml_data["estimated_kp"].shift(-60)
+        ml_data = ml_data.dropna().reset_index(drop=True)
+
+        if len(ml_data) < 250:
+            st.warning(f"Not enough clean official observations for a meaningful time-ordered training/test run yet ({len(ml_data)} usable rows; at least 250 required). The ML forecast is withheld rather than using fabricated data.")
+            st.info("Keep the app online and try again after more NOAA observations are available, or later expand the collector to download official historical archives.")
+        else:
+            feature_cols = [f"kp_lag_{lag}" for lag in lag_steps]
+            split_at = int(len(ml_data) * 0.8)
+            train, test = ml_data.iloc[:split_at], ml_data.iloc[split_at:]
+            model = RandomForestRegressor(n_estimators=180, max_depth=10, min_samples_leaf=3, random_state=42, n_jobs=-1)
+            model.fit(train[feature_cols], train["target_kp_60m"])
+            test_pred = np.clip(model.predict(test[feature_cols]), 0, 9)
+            mae = float(mean_absolute_error(test["target_kp_60m"], test_pred))
+            rmse = float(np.sqrt(mean_squared_error(test["target_kp_60m"], test_pred)))
+            latest_features = ml_data.iloc[[-1]][feature_cols]
+            prediction = float(np.clip(model.predict(latest_features)[0], 0, 9))
+            latest_time = pd.to_datetime(ml_kp["time_tag"].iloc[-1], utc=True)
+            forecast_time = latest_time + pd.Timedelta(minutes=60)
+            current_kp = float(ml_kp["estimated_kp"].iloc[-1])
+            delta = prediction - current_kp
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Latest NOAA Kp", f"{current_kp:.2f}")
+            m2.metric("ML estimate · +60 min", f"{prediction:.2f}", f"{delta:+.2f} vs latest")
+            m3.metric("Test MAE", f"{mae:.3f}", help="Mean absolute error on the later 20% of the time-ordered dataset; lower is better.")
+            m4.metric("Test RMSE", f"{rmse:.3f}", help="Root mean squared error on the later 20% of the time-ordered dataset; lower is better.")
+            st.caption(f"Forecast target time: {forecast_time.strftime('%Y-%m-%d %H:%M UTC')} · Latest source observation: {latest_time.strftime('%Y-%m-%d %H:%M UTC')} · Training rows: {len(train):,} · Test rows: {len(test):,}")
+
+            chart_df = ml_data[["time_tag", "estimated_kp", "target_kp_60m"]].tail(240).copy()
+            chart_df = chart_df.rename(columns={"estimated_kp": "Observed Kp", "target_kp_60m": "Observed Kp +60 min (target)"})
+            st.markdown("#### Recent official observations and one-hour target")
+            st.line_chart(chart_df.set_index("time_tag"), height=250)
+            st.markdown("#### Model transparency")
+            importance = pd.DataFrame({"Feature": feature_cols, "Importance": model.feature_importances_}).sort_values("Importance", ascending=False)
+            st.bar_chart(importance.set_index("Feature"), height=190)
+            st.caption("Validation uses a chronological split: earlier rows train the model and later rows test it. Nearby rows can be strongly correlated, so these metrics are an initial project evaluation, not proof of operational forecasting skill. The model is retrained from the available feed when this section reruns; it does not yet persist a long-term archive between app restarts.")
+            if prediction >= 5:
+                st.warning("The experimental ML estimate is in the Kp ≥ 5 range. Check the official NOAA forecast and alerts before taking action; do not rely on this model alone.")
+            else:
+                st.info("The experimental ML estimate is below Kp 5. Continue monitoring official NOAA products; this is not a guarantee of quiet conditions.")
+    except ImportError:
+        st.error("The ML library is not installed. Add `scikit-learn` to requirements.txt and restart the app.")
+    except Exception as exc:
+        st.warning(f"The ML Prediction Center could not retrieve or process official NOAA observations right now: {exc}")
+        st.caption("The rest of the dashboard remains available. Please retry when the NOAA data service is reachable.")
+
+# ---------- End AI Prediction Center ----------
 
 # ---------- Alert history ----------
 if "hist" not in st.session_state:
@@ -1055,6 +1462,81 @@ if kp_df is not None:
     b.line_chart(kp_df.set_index("time_tag")["estimated_kp"])
 else:
     b.info(t["geo"] + ": " + t["unavail"])
+
+# ---------- AI PREDICTION CENTER · HISTORICAL NOAA MODEL ----------
+st.markdown("""
+<style>
+.ai-hero{position:relative;overflow:hidden;border:1px solid rgba(124,110,255,.35);border-radius:22px;padding:24px 26px;margin:18px 0 22px;background:radial-gradient(circle at 85% 20%,rgba(78,91,255,.25),transparent 32%),linear-gradient(120deg,rgba(12,24,47,.98),rgba(28,18,57,.94));box-shadow:0 18px 50px rgba(0,0,0,.22)}
+.ai-hero:after{content:"";position:absolute;width:230px;height:230px;right:-55px;top:-115px;border:1px solid rgba(121,210,255,.26);border-radius:50%;box-shadow:0 0 0 22px rgba(121,210,255,.035),0 0 0 48px rgba(121,210,255,.025);animation:orbitPulse 7s ease-in-out infinite}
+.ai-kicker{font-size:11px;letter-spacing:.19em;font-weight:800;color:#a5b4fc}.ai-title{font-size:clamp(24px,3vw,38px);font-weight:850;line-height:1.1;margin:8px 0;color:#f2f5ff}.ai-copy{color:#b9c6e8;max-width:850px;font-size:14px}.ai-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#61f4c0;box-shadow:0 0 14px #61f4c0;margin-right:8px;animation:livePulse 1.8s infinite}
+@keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live{animation:none}}
+</style>
+<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · DATA-DRIVEN OUTLOOK</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A transparent machine-learning experiment trained on recent official NOAA planetary Kp observations. The model learns from historical sequences and estimates Kp about one hour ahead. This is an experimental model output—not an official NOAA forecast or operational warning.</div></div>
+""", unsafe_allow_html=True)
+
+with st.expander("🧠 Explore the ML forecast, validation and data provenance", expanded=True):
+    st.caption("SOURCE: NOAA Space Weather Prediction Center · planetary_k_index_1m.json · observations are cached for 15 minutes. Only downloaded observations are used; no synthetic training rows are created.")
+    try:
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+        ml_kp = get_kp().copy().sort_values("time_tag").drop_duplicates("time_tag")
+        ml_kp["estimated_kp"] = pd.to_numeric(ml_kp["estimated_kp"], errors="coerce")
+        ml_kp = ml_kp.dropna(subset=["estimated_kp"])
+        # The SWPC feed is sampled at short intervals. Predict the Kp value
+        # approximately one hour later using only earlier measurements.
+        lag_steps = [1, 5, 15, 30, 60]
+        ml_data = ml_kp[["time_tag", "estimated_kp"]].copy()
+        for lag in lag_steps:
+            ml_data[f"kp_lag_{lag}"] = ml_data["estimated_kp"].shift(lag)
+        ml_data["target_kp_60m"] = ml_data["estimated_kp"].shift(-60)
+        ml_data = ml_data.dropna().reset_index(drop=True)
+
+        if len(ml_data) < 250:
+            st.warning(f"Not enough clean official observations for a meaningful time-ordered training/test run yet ({len(ml_data)} usable rows; at least 250 required). The ML forecast is withheld rather than using fabricated data.")
+            st.info("Keep the app online and try again after more NOAA observations are available, or later expand the collector to download official historical archives.")
+        else:
+            feature_cols = [f"kp_lag_{lag}" for lag in lag_steps]
+            split_at = int(len(ml_data) * 0.8)
+            train, test = ml_data.iloc[:split_at], ml_data.iloc[split_at:]
+            model = RandomForestRegressor(n_estimators=180, max_depth=10, min_samples_leaf=3, random_state=42, n_jobs=-1)
+            model.fit(train[feature_cols], train["target_kp_60m"])
+            test_pred = np.clip(model.predict(test[feature_cols]), 0, 9)
+            mae = float(mean_absolute_error(test["target_kp_60m"], test_pred))
+            rmse = float(np.sqrt(mean_squared_error(test["target_kp_60m"], test_pred)))
+            latest_features = ml_data.iloc[[-1]][feature_cols]
+            prediction = float(np.clip(model.predict(latest_features)[0], 0, 9))
+            latest_time = pd.to_datetime(ml_kp["time_tag"].iloc[-1], utc=True)
+            forecast_time = latest_time + pd.Timedelta(minutes=60)
+            current_kp = float(ml_kp["estimated_kp"].iloc[-1])
+            delta = prediction - current_kp
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Latest NOAA Kp", f"{current_kp:.2f}")
+            m2.metric("ML estimate · +60 min", f"{prediction:.2f}", f"{delta:+.2f} vs latest")
+            m3.metric("Test MAE", f"{mae:.3f}", help="Mean absolute error on the later 20% of the time-ordered dataset; lower is better.")
+            m4.metric("Test RMSE", f"{rmse:.3f}", help="Root mean squared error on the later 20% of the time-ordered dataset; lower is better.")
+            st.caption(f"Forecast target time: {forecast_time.strftime('%Y-%m-%d %H:%M UTC')} · Latest source observation: {latest_time.strftime('%Y-%m-%d %H:%M UTC')} · Training rows: {len(train):,} · Test rows: {len(test):,}")
+
+            chart_df = ml_data[["time_tag", "estimated_kp", "target_kp_60m"]].tail(240).copy()
+            chart_df = chart_df.rename(columns={"estimated_kp": "Observed Kp", "target_kp_60m": "Observed Kp +60 min (target)"})
+            st.markdown("#### Recent official observations and one-hour target")
+            st.line_chart(chart_df.set_index("time_tag"), height=250)
+            st.markdown("#### Model transparency")
+            importance = pd.DataFrame({"Feature": feature_cols, "Importance": model.feature_importances_}).sort_values("Importance", ascending=False)
+            st.bar_chart(importance.set_index("Feature"), height=190)
+            st.caption("Validation uses a chronological split: earlier rows train the model and later rows test it. Nearby rows can be strongly correlated, so these metrics are an initial project evaluation, not proof of operational forecasting skill. The model is retrained from the available feed when this section reruns; it does not yet persist a long-term archive between app restarts.")
+            if prediction >= 5:
+                st.warning("The experimental ML estimate is in the Kp ≥ 5 range. Check the official NOAA forecast and alerts before taking action; do not rely on this model alone.")
+            else:
+                st.info("The experimental ML estimate is below Kp 5. Continue monitoring official NOAA products; this is not a guarantee of quiet conditions.")
+    except ImportError:
+        st.error("The ML library is not installed. Add `scikit-learn` to requirements.txt and restart the app.")
+    except Exception as exc:
+        st.warning(f"The ML Prediction Center could not retrieve or process official NOAA observations right now: {exc}")
+        st.caption("The rest of the dashboard remains available. Please retry when the NOAA data service is reachable.")
+
+# ---------- End AI Prediction Center ----------
 
 # ---------- Alert history ----------
 st.subheader(t["hist"])
