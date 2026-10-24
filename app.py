@@ -796,7 +796,6 @@ st.markdown(
     'SPACE WEATHER OPERATIONS · INDIA MONITORING</div>',
     unsafe_allow_html=True,
 )
-st.title(t["title"])
 st.caption(t["caption"])
 
 # ---------- Unified 3D mission-console visual system ----------
