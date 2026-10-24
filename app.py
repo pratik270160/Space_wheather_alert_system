@@ -756,6 +756,36 @@ st.markdown(
 st.title(t["title"])
 st.caption(t["caption"])
 
+# ---------- Unified 3D mission-console visual system ----------
+st.markdown("""
+<style>
+:root{--mw-cyan:#65f2ff;--mw-blue:#5b8cff;--mw-violet:#a78bfa;--mw-glass:rgba(18,35,68,.62)}
+@keyframes mwFloat{0%,100%{transform:translateY(0) perspective(900px) rotateX(0deg)}50%{transform:translateY(-4px) perspective(900px) rotateX(.7deg)}}
+@keyframes mwSheen{0%{background-position:-180% 0}100%{background-position:180% 0}}
+@keyframes mwGlow{0%,100%{box-shadow:0 12px 30px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.12)}50%{box-shadow:0 18px 42px rgba(39,155,255,.20),inset 0 1px rgba(255,255,255,.22)}}
+/* Main dashboard status banner: dimensional glass rather than a flat colour block. */
+div[data-testid="stMarkdownContainer"] .mw-status-card{position:relative;overflow:hidden;border:1px solid rgba(140,220,255,.42);border-radius:20px;padding:20px 24px;color:#f6fbff;background:linear-gradient(135deg,rgba(12,30,58,.94),rgba(22,61,102,.88));box-shadow:0 18px 34px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.24),inset 0 -12px 24px rgba(4,12,30,.20);transform:perspective(1000px) rotateX(1deg);transition:transform .35s ease,box-shadow .35s ease}
+div[data-testid="stMarkdownContainer"] .mw-status-card:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.11) 45%,transparent 65%);background-size:220% 100%;animation:mwSheen 7s linear infinite;pointer-events:none}
+div[data-testid="stMarkdownContainer"] .mw-status-card:hover{transform:perspective(1000px) rotateX(0deg) translateY(-4px);box-shadow:0 24px 46px rgba(20,145,255,.24),inset 0 1px 0 rgba(255,255,255,.3)}
+/* Native Streamlit metric, alert and expander surfaces share the same depth. */
+div[data-testid="stMetric"]{position:relative;border:1px solid rgba(124,190,255,.26);border-radius:17px;padding:13px 15px;background:linear-gradient(145deg,rgba(30,57,94,.70),rgba(11,24,48,.82));box-shadow:0 9px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.12);transition:transform .25s ease,box-shadow .25s ease;overflow:hidden}
+div[data-testid="stMetric"]:hover{transform:translateY(-5px) perspective(800px) rotateX(2deg);box-shadow:0 18px 28px rgba(37,145,255,.20),inset 0 1px 0 rgba(255,255,255,.22)}
+div[data-testid="stAlert"]{border:1px solid rgba(140,205,255,.34)!important;border-radius:16px!important;box-shadow:0 10px 24px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.16);transition:transform .25s ease,box-shadow .25s ease}
+div[data-testid="stAlert"]:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(40,140,255,.17),inset 0 1px 0 rgba(255,255,255,.22)}
+div[data-testid="stExpander"]{border:1px solid rgba(125,190,255,.28);border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,.12);transition:box-shadow .25s ease}
+div[data-testid="stExpander"]:hover{box-shadow:0 16px 32px rgba(36,130,255,.15)}
+.module-ribbon{display:flex;align-items:center;gap:13px;margin:28px 0 16px;padding:13px 17px;border:1px solid rgba(113,205,255,.26);border-radius:15px;background:linear-gradient(105deg,rgba(17,37,69,.82),rgba(28,25,65,.56));box-shadow:0 10px 24px rgba(0,0,0,.13),inset 0 1px rgba(255,255,255,.10)}.module-ribbon>span{display:grid;place-items:center;width:39px;height:39px;flex:0 0 39px;border-radius:12px;background:linear-gradient(145deg,#6ee7f9,#6677ff);color:#06162d;font-weight:900;box-shadow:0 5px 14px rgba(75,160,255,.25)}.module-ribbon b{display:block;color:#e9f6ff;letter-spacing:.12em;font-size:12px}.module-ribbon small{display:block;color:#9fb8d8;margin-top:3px;font-size:11px}.mw-rec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:10px 0 14px}
+.mw-rec-card{position:relative;min-height:154px;overflow:hidden;border:1px solid rgba(135,205,255,.36);border-radius:18px;padding:17px 17px 18px;background:linear-gradient(145deg,rgba(29,57,94,.92),rgba(11,24,48,.94));color:#edf7ff;box-shadow:0 13px 25px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.17),inset 0 -10px 18px rgba(0,0,0,.15);transform:perspective(900px) rotateX(1deg);transition:transform .32s ease,box-shadow .32s ease,border-color .32s ease}
+.mw-rec-card:before{content:"";position:absolute;inset:0;background:linear-gradient(112deg,transparent 10%,rgba(255,255,255,.10) 45%,transparent 65%);background-size:230% 100%;animation:mwSheen 8s linear infinite;pointer-events:none}
+.mw-rec-card:hover{transform:perspective(900px) translateY(-7px) rotateX(0deg) rotateY(-1deg);box-shadow:0 24px 38px rgba(0,0,0,.30),0 0 24px rgba(72,190,255,.16),inset 0 1px 0 rgba(255,255,255,.24);border-color:rgba(111,230,255,.68)}
+.mw-rec-card h4{margin:0 0 10px;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#8eeeff}
+.mw-rec-card p{margin:0;font-size:13px;line-height:1.55;color:#e2edff}
+.mw-rec-card .mw-rec-state{display:inline-block;margin-bottom:10px;padding:4px 8px;border-radius:99px;font-size:10px;letter-spacing:.09em;font-weight:800;background:rgba(91,140,255,.20);border:1px solid rgba(135,190,255,.28)}
+@media(max-width:700px){.mw-rec-grid{grid-template-columns:1fr}.mw-rec-card{min-height:unset}}
+@media(prefers-reduced-motion:reduce){.mw-status-card:before,.mw-rec-card:before{animation:none}div[data-testid="stMetric"],div[data-testid="stAlert"],.mw-rec-card,.mw-status-card{transition:none}}
+</style>
+""", unsafe_allow_html=True)
+
 st.sidebar.markdown("<div class=\"mission-kicker\"><span class=\"mission-dot\"></span>MISSION CONTROLS</div>", unsafe_allow_html=True)
 st.sidebar.header(t["settings"])
 view = st.sidebar.radio(t["view"], [0, 1], format_func=lambda i: t["views"][i], horizontal=True)
@@ -764,6 +794,8 @@ state = st.sidebar.selectbox(
 )
 demo = st.sidebar.checkbox(t["demo"])
 
+# ---------- MODULE 01 · SIMULATE ----------
+st.markdown('<div class="module-ribbon"><span>01</span><div><b>SIMULATE</b><small>Explore hypothetical space-weather scenarios</small></div></div>', unsafe_allow_html=True)
 # ---------- Interactive Space Weather Mission Simulator ----------
 SIM_TXT = {
     "en": {
@@ -967,30 +999,22 @@ with st.expander(_sim["title"], expanded=True):
     chart_right.plotly_chart(geo_fig, use_container_width=True, key="mission_sim_geo_curve")
 
     st.markdown("#### " + _sim["recommendation"])
-    if sim_radio >= 3:
-        st.warning(_sim["radio_high"])
-    elif sim_radio >= 1:
-        st.info(_sim["radio_mid"])
-    else:
-        st.success(_sim["radio_low"])
-
-    if sim_local_kp >= 5:
-        st.warning(_sim["geo_high"])
-    elif sim_local_kp >= 3:
-        st.info(_sim["geo_mid"])
-    else:
-        st.success(_sim["geo_low"])
-
+    radio_advice = _sim["radio_high"] if sim_radio >= 3 else (_sim["radio_mid"] if sim_radio >= 1 else _sim["radio_low"])
+    geo_advice = _sim["geo_high"] if sim_local_kp >= 5 else (_sim["geo_mid"] if sim_local_kp >= 3 else _sim["geo_low"])
     if view == 1:
-        if sim_local_kp >= 7:
-            st.error(_sim["farmer_high"])
-        elif sim_local_kp >= 5:
-            st.warning(_sim["farmer_mid"])
-        else:
-            st.success(_sim["farmer_low"])
+        action_advice = _sim["farmer_high"] if sim_local_kp >= 7 else (_sim["farmer_mid"] if sim_local_kp >= 5 else _sim["farmer_low"])
+        action_title = "FARMER ACTION PLAN"
     else:
-        st.info(_sim["telecom"])
-
+        action_advice = _sim["telecom"]
+        action_title = "TELECOM ACTION PLAN"
+    def _card_state(high, medium):
+        return "ELEVATED CONCERN" if high else ("MONITOR" if medium else "LOW CONCERN")
+    recommendation_html = f'''<div class="mw-rec-grid">
+      <article class="mw-rec-card"><span class="mw-rec-state">{_card_state(sim_radio >= 3, sim_radio >= 1)}</span><h4>◉ RADIO / X-RAY</h4><p>{radio_advice}</p></article>
+      <article class="mw-rec-card"><span class="mw-rec-state">{_card_state(sim_local_kp >= 5, sim_local_kp >= 3)}</span><h4>⌁ GEOMAGNETIC / GNSS</h4><p>{geo_advice}</p></article>
+      <article class="mw-rec-card"><span class="mw-rec-state">SCENARIO GUIDANCE</span><h4>✦ {action_title}</h4><p>{action_advice}</p></article>
+    </div>'''
+    st.markdown(recommendation_html, unsafe_allow_html=True)
     st.caption(_sim["baseline_note"])
 
 # ---------- End interactive simulator ----------
@@ -1108,6 +1132,8 @@ render_iot_simulator(iot_enabled, iot_disconnected)
 
 # ---------- End of Simulated IoT Module ----------
 
+# ---------- MODULE 02 · LIVE SITUATIONAL AWARENESS ----------
+st.markdown('<div class="module-ribbon"><span>02</span><div><b>LIVE MONITORING & ADVISORY</b><small>Official observations · current risk · operational guidance · map and forecast</small></div></div>', unsafe_allow_html=True)
 # ---------- Data (each feed fails on its own) ----------
 xray_df = None
 kp_df = None
@@ -1179,80 +1205,7 @@ r_sev = {0: 0, 1: 1, 2: 1, 3: 2, 4: 3, 5: 3}[r_loc]
 sev = max(c_idx, r_sev)
 tier = 2 if (pause or sev >= 3) else (1 if sev >= 1 else 0)
 
-# ---------- AI PREDICTION CENTER · HISTORICAL NOAA MODEL ----------
-st.markdown("""
-<style>
-.ai-hero{position:relative;overflow:hidden;border:1px solid rgba(124,110,255,.35);border-radius:22px;padding:24px 26px;margin:18px 0 22px;background:radial-gradient(circle at 85% 20%,rgba(78,91,255,.25),transparent 32%),linear-gradient(120deg,rgba(12,24,47,.98),rgba(28,18,57,.94));box-shadow:0 18px 50px rgba(0,0,0,.22)}
-.ai-hero:after{content:"";position:absolute;width:230px;height:230px;right:-55px;top:-115px;border:1px solid rgba(121,210,255,.26);border-radius:50%;box-shadow:0 0 0 22px rgba(121,210,255,.035),0 0 0 48px rgba(121,210,255,.025);animation:orbitPulse 7s ease-in-out infinite}
-.ai-kicker{font-size:11px;letter-spacing:.19em;font-weight:800;color:#a5b4fc}.ai-title{font-size:clamp(24px,3vw,38px);font-weight:850;line-height:1.1;margin:8px 0;color:#f2f5ff}.ai-copy{color:#b9c6e8;max-width:850px;font-size:14px}.ai-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#61f4c0;box-shadow:0 0 14px #61f4c0;margin-right:8px;animation:livePulse 1.8s infinite}
-@keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
-@media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live{animation:none}}
-</style>
-<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · DATA-DRIVEN OUTLOOK</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A transparent machine-learning experiment trained on recent official NOAA planetary Kp observations. The model learns from historical sequences and estimates Kp about one hour ahead. This is an experimental model output—not an official NOAA forecast or operational warning.</div></div>
-""", unsafe_allow_html=True)
 
-with st.expander("🧠 Explore the ML forecast, validation and data provenance", expanded=True):
-    st.caption("SOURCE: NOAA Space Weather Prediction Center · planetary_k_index_1m.json · observations are cached for 15 minutes. Only downloaded observations are used; no synthetic training rows are created.")
-    try:
-        from sklearn.ensemble import RandomForestRegressor
-        from sklearn.metrics import mean_absolute_error, mean_squared_error
-
-        ml_kp = get_kp().copy().sort_values("time_tag").drop_duplicates("time_tag")
-        ml_kp["estimated_kp"] = pd.to_numeric(ml_kp["estimated_kp"], errors="coerce")
-        ml_kp = ml_kp.dropna(subset=["estimated_kp"])
-        # The SWPC feed is sampled at short intervals. Predict the Kp value
-        # approximately one hour later using only earlier measurements.
-        lag_steps = [1, 5, 15, 30, 60]
-        ml_data = ml_kp[["time_tag", "estimated_kp"]].copy()
-        for lag in lag_steps:
-            ml_data[f"kp_lag_{lag}"] = ml_data["estimated_kp"].shift(lag)
-        ml_data["target_kp_60m"] = ml_data["estimated_kp"].shift(-60)
-        ml_data = ml_data.dropna().reset_index(drop=True)
-
-        if len(ml_data) < 250:
-            st.warning(f"Not enough clean official observations for a meaningful time-ordered training/test run yet ({len(ml_data)} usable rows; at least 250 required). The ML forecast is withheld rather than using fabricated data.")
-            st.info("Keep the app online and try again after more NOAA observations are available, or later expand the collector to download official historical archives.")
-        else:
-            feature_cols = [f"kp_lag_{lag}" for lag in lag_steps]
-            split_at = int(len(ml_data) * 0.8)
-            train, test = ml_data.iloc[:split_at], ml_data.iloc[split_at:]
-            model = RandomForestRegressor(n_estimators=180, max_depth=10, min_samples_leaf=3, random_state=42, n_jobs=-1)
-            model.fit(train[feature_cols], train["target_kp_60m"])
-            test_pred = np.clip(model.predict(test[feature_cols]), 0, 9)
-            mae = float(mean_absolute_error(test["target_kp_60m"], test_pred))
-            rmse = float(np.sqrt(mean_squared_error(test["target_kp_60m"], test_pred)))
-            latest_features = ml_data.iloc[[-1]][feature_cols]
-            prediction = float(np.clip(model.predict(latest_features)[0], 0, 9))
-            latest_time = pd.to_datetime(ml_kp["time_tag"].iloc[-1], utc=True)
-            forecast_time = latest_time + pd.Timedelta(minutes=60)
-            current_kp = float(ml_kp["estimated_kp"].iloc[-1])
-            delta = prediction - current_kp
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Latest NOAA Kp", f"{current_kp:.2f}")
-            m2.metric("ML estimate · +60 min", f"{prediction:.2f}", f"{delta:+.2f} vs latest")
-            m3.metric("Test MAE", f"{mae:.3f}", help="Mean absolute error on the later 20% of the time-ordered dataset; lower is better.")
-            m4.metric("Test RMSE", f"{rmse:.3f}", help="Root mean squared error on the later 20% of the time-ordered dataset; lower is better.")
-            st.caption(f"Forecast target time: {forecast_time.strftime('%Y-%m-%d %H:%M UTC')} · Latest source observation: {latest_time.strftime('%Y-%m-%d %H:%M UTC')} · Training rows: {len(train):,} · Test rows: {len(test):,}")
-
-            chart_df = ml_data[["time_tag", "estimated_kp", "target_kp_60m"]].tail(240).copy()
-            chart_df = chart_df.rename(columns={"estimated_kp": "Observed Kp", "target_kp_60m": "Observed Kp +60 min (target)"})
-            st.markdown("#### Recent official observations and one-hour target")
-            st.line_chart(chart_df.set_index("time_tag"), height=250)
-            st.markdown("#### Model transparency")
-            importance = pd.DataFrame({"Feature": feature_cols, "Importance": model.feature_importances_}).sort_values("Importance", ascending=False)
-            st.bar_chart(importance.set_index("Feature"), height=190)
-            st.caption("Validation uses a chronological split: earlier rows train the model and later rows test it. Nearby rows can be strongly correlated, so these metrics are an initial project evaluation, not proof of operational forecasting skill. The model is retrained from the available feed when this section reruns; it does not yet persist a long-term archive between app restarts.")
-            if prediction >= 5:
-                st.warning("The experimental ML estimate is in the Kp ≥ 5 range. Check the official NOAA forecast and alerts before taking action; do not rely on this model alone.")
-            else:
-                st.info("The experimental ML estimate is below Kp 5. Continue monitoring official NOAA products; this is not a guarantee of quiet conditions.")
-    except ImportError:
-        st.error("The ML library is not installed. Add `scikit-learn` to requirements.txt and restart the app.")
-    except Exception as exc:
-        st.warning(f"The ML Prediction Center could not retrieve or process official NOAA observations right now: {exc}")
-        st.caption("The rest of the dashboard remains available. Please retry when the NOAA data service is reachable.")
-
-# ---------- End AI Prediction Center ----------
 
 # ---------- Alert history ----------
 if "hist" not in st.session_state:
@@ -1280,10 +1233,10 @@ banner_html = """
   100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
 }
 </style>
-<div style="background:__BG__;padding:18px 22px;border-radius:14px;color:white;__GLOW__">
-  <div style="font-size:14px;opacity:0.9;">📍 __STATE__</div>
-  <div style="font-size:30px;font-weight:700;">__SEV__</div>
-  <div style="font-size:15px;">__SUB__</div>
+<div class="mw-status-card" style="border-color:__BG__;__GLOW__">
+  <div style="font-size:12px;letter-spacing:.12em;opacity:.88;">◉ LIVE STATUS · __STATE__</div>
+  <div style="font-size:clamp(23px,3vw,31px);font-weight:850;letter-spacing:-.02em;margin:6px 0 4px;">__SEV__</div>
+  <div style="font-size:15px;opacity:.92;">__SUB__</div>
 </div>
 """
 banner_html = (
@@ -1472,7 +1425,7 @@ st.markdown("""
 @keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live{animation:none}}
 </style>
-<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · DATA-DRIVEN OUTLOOK</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A transparent machine-learning experiment trained on recent official NOAA planetary Kp observations. The model learns from historical sequences and estimates Kp about one hour ahead. This is an experimental model output—not an official NOAA forecast or operational warning.</div></div>
+<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · PREDICTIVE INTELLIGENCE</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A transparent machine-learning experiment trained on recent official NOAA planetary Kp observations. The model learns from historical sequences and estimates Kp about one hour ahead. This is an experimental model output—not an official NOAA forecast or operational warning.</div></div>
 """, unsafe_allow_html=True)
 
 with st.expander("🧠 Explore the ML forecast, validation and data provenance", expanded=True):
