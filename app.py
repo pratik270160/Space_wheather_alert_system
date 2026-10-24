@@ -7,6 +7,156 @@ from urllib.parse import quote
 from datetime import datetime, timedelta, timezone
 
 st.set_page_config(page_title="Space Weather Alert System", page_icon="🛰️", layout="wide")
+
+
+# ---------- Premium mission-control styling ----------
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --space-bg: #07111f;
+    --space-panel: #0d1b2d;
+    --space-panel-2: #10243a;
+    --space-line: rgba(112, 171, 220, .22);
+    --space-cyan: #55e6f2;
+    --space-violet: #a78bfa;
+    --space-text: #e8f1fb;
+    --space-muted: #9fb4ca;
+}
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+.stApp {
+    background:
+      radial-gradient(ellipse at 12% 0%, rgba(29, 78, 137, .24), transparent 38%),
+      radial-gradient(ellipse at 92% 8%, rgba(103, 58, 183, .18), transparent 30%),
+      var(--space-bg);
+    color: var(--space-text);
+}
+[data-testid="stHeader"] {
+    background: rgba(7, 17, 31, .72);
+}
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0a1728 0%, #0c1b2e 100%);
+    border-right: 1px solid var(--space-line);
+}
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    color: var(--space-muted);
+}
+h1, h2, h3 {
+    letter-spacing: -.035em;
+}
+h1 {
+    font-weight: 800 !important;
+    background: linear-gradient(90deg, #f2fbff 0%, var(--space-cyan) 48%, var(--space-violet) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+h2, h3 {
+    color: #e6f4ff;
+}
+[data-testid="stCaptionContainer"] {
+    color: var(--space-muted);
+}
+[data-testid="stMetric"] {
+    background: linear-gradient(145deg, rgba(17, 39, 61, .96), rgba(10, 25, 42, .96));
+    border: 1px solid var(--space-line);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .16);
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+[data-testid="stMetric"]:hover {
+    transform: translateY(-3px);
+    border-color: rgba(85, 230, 242, .62);
+    box-shadow: 0 10px 30px rgba(27, 192, 220, .10);
+}
+[data-testid="stMetricLabel"] {
+    color: #a9c0d7 !important;
+}
+[data-testid="stMetricValue"] {
+    color: #f4fbff !important;
+    font-weight: 800;
+}
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-color: var(--space-line);
+}
+div[data-testid="stExpander"] {
+    border: 1px solid var(--space-line);
+    border-radius: 14px;
+    background: rgba(13, 27, 45, .72);
+}
+.stButton > button, .stLinkButton > a {
+    border-radius: 10px;
+    border: 1px solid rgba(85, 230, 242, .45);
+    background: linear-gradient(100deg, rgba(21, 90, 116, .88), rgba(67, 56, 125, .88));
+    color: #f4fbff;
+    font-weight: 650;
+    transition: transform .18s ease, filter .18s ease;
+}
+.stButton > button:hover, .stLinkButton > a:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+    border-color: var(--space-cyan);
+    color: white;
+}
+[data-testid="stTabs"] button[role="tab"] {
+    border-radius: 10px 10px 0 0;
+}
+[data-testid="stDataFrame"], [data-testid="stTable"] {
+    border: 1px solid var(--space-line);
+    border-radius: 12px;
+    overflow: hidden;
+}
+[data-testid="stPlotlyChart"], [data-testid="stArrowVegaLiteChart"] {
+    border: 1px solid rgba(112, 171, 220, .16);
+    border-radius: 14px;
+    padding: 6px;
+    background: rgba(10, 24, 40, .58);
+}
+hr {
+    border-color: var(--space-line);
+}
+.mission-kicker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--space-cyan);
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    font-size: .72rem;
+    font-weight: 800;
+    margin: 0 0 .45rem 0;
+}
+.mission-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 12px rgba(74, 222, 128, .85);
+    display: inline-block;
+    animation: mission-pulse 2s infinite;
+}
+@keyframes mission-pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 5px rgba(74, 222, 128, .55); }
+    50% { opacity: .65; box-shadow: 0 0 15px rgba(74, 222, 128, .95); }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Give Plotly charts a consistent dark theme.
+px.defaults.template = "plotly_dark"
+
 BASE = "https://services.swpc.noaa.gov"
 
 TXT = {
@@ -479,6 +629,11 @@ lk = "en" if lang_choice == "English" else "hi"
 li = 0 if lk == "en" else 1
 t = TXT[lk]
 
+st.markdown(
+    '<div class="mission-kicker"><span class="mission-dot"></span>'
+    'SPACE WEATHER OPERATIONS · INDIA MONITORING</div>',
+    unsafe_allow_html=True,
+)
 st.title(t["title"])
 st.caption(t["caption"])
 
@@ -488,6 +643,118 @@ state = st.sidebar.selectbox(
     t["state"], list(STATES.keys()), index=list(STATES).index("Uttar Pradesh")
 )
 demo = st.sidebar.checkbox(t["demo"])
+
+# ---------- Simulated IoT Monitoring Module ----------
+
+iot_enabled = st.sidebar.checkbox(
+    "📡 Enable IoT Simulation Mode",
+    value=False,
+)
+
+iot_disconnected = False
+
+if iot_enabled:
+    iot_disconnected = st.sidebar.checkbox(
+        "🔌 Simulate IoT Device Disconnection",
+        value=False,
+    )
+
+
+@st.fragment(run_every="5s")
+def render_iot_simulator(enabled, disconnected):
+    if not enabled:
+        return
+
+    st.subheader("📡 IoT Sensor Monitoring")
+    st.caption(
+        "SIMULATION ONLY — these readings are generated by Python, "
+        "not measured by a physical sensor."
+    )
+
+    # Initialize session history
+    if "iot_history" not in st.session_state:
+        st.session_state.iot_history = []
+
+    if disconnected:
+        st.error(
+            "🔴 Simulated IoT device disconnected. "
+            "No new sensor readings are being generated."
+        )
+    else:
+        # Generate illustrative three-axis magnetic field readings.
+        # These values are synthetic and do not represent real conditions.
+        bx = 20.0 + float(np.random.normal(0, 0.05))
+        by = 15.0 + float(np.random.normal(0, 0.05))
+        bz = 35.0 + float(np.random.normal(0, 0.05))
+
+        magnitude = float(np.sqrt(bx**2 + by**2 + bz**2))
+
+        reading = {
+            "Time (UTC)": datetime.now(timezone.utc),
+            "Bx (µT)": round(bx, 3),
+            "By (µT)": round(by, 3),
+            "Bz (µT)": round(bz, 3),
+            "Magnitude (µT)": round(magnitude, 3),
+        }
+
+        st.session_state.iot_history.append(reading)
+
+        # Keep only the latest 120 simulated readings.
+        st.session_state.iot_history = (
+            st.session_state.iot_history[-120:]
+        )
+
+        st.success("🟢 Simulated IoT device connected")
+
+    history = st.session_state.iot_history
+
+    if history:
+        history_df = pd.DataFrame(history)
+
+        latest = history_df.iloc[-1]
+
+        c1, c2, c3 = st.columns(3)
+
+        c1.metric(
+            "Magnetic Field Magnitude",
+            f"{latest['Magnitude (µT)']:.3f} µT",
+        )
+
+        c2.metric(
+            "Latest Bx Reading",
+            f"{latest['Bx (µT)']:.3f} µT",
+        )
+
+        c3.metric(
+            "Latest Bz Reading",
+            f"{latest['Bz (µT)']:.3f} µT",
+        )
+
+        st.markdown("#### 📈 Simulated Sensor History")
+
+        chart_df = history_df.set_index("Time (UTC)")
+
+        st.line_chart(
+            chart_df[["Magnitude (µT)"]]
+        )
+
+        st.markdown("#### Recent Sensor Readings")
+
+        st.dataframe(
+            history_df.tail(10).iloc[::-1],
+            hide_index=True,
+            width="stretch",
+        )
+    else:
+        st.info(
+            "No simulated readings have been collected yet."
+        )
+
+
+# Display the IoT panel without replacing the existing dashboard.
+render_iot_simulator(iot_enabled, iot_disconnected)
+
+# ---------- End of Simulated IoT Module ----------
 
 # ---------- Data (each feed fails on its own) ----------
 xray_df = None
@@ -722,7 +989,7 @@ fig = px.scatter_map(
     zoom=3.4,
     center={"lat": 23.0, "lon": 80.0},
     height=480,
-    map_style="open-street-map",
+    map_style="carto-darkmatter",
 )
 fig.update_traces(marker=dict(size=18))
 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), legend_title_text="")
