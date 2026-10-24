@@ -6,8 +6,51 @@ import plotly.express as px
 from urllib.parse import quote
 from datetime import datetime, timedelta, timezone
 
-st.set_page_config(page_title="Space Weather Alert System", page_icon="🛰️", layout="wide")
+st.set_page_config(
+    page_title="SuryaDrishti",
+    page_icon="icon.png",
+    layout="wide"
+)
 
+st.markdown("""
+<div class="main-brand">
+    <h1>☀️ SuryaDrishti</h1>
+    <p class="brand-subtitle">SPACE WEATHER ALERT SYSTEM</p>
+    <p class="brand-tagline">
+        AI-Powered Space Weather Intelligence
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<style>
+.main-brand {
+    text-align: center;
+    padding: 12px 0 24px;
+}
+
+.main-brand h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: #F8FAFC;
+}
+
+.brand-subtitle {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #8FCBFF;
+    margin: 0;
+}
+
+.brand-tagline {
+    font-size: 0.9rem;
+    color: #A8B8CC;
+    margin-top: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ---------- Premium mission-control styling ----------
 st.markdown("""
