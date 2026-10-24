@@ -1337,8 +1337,8 @@ if view == 1:
 # ---------- SMS / WhatsApp alert ----------
 st.subheader(t["sms_h"])
 st.caption(t["sms_note"])
-tab_hi, tab_en = st.tabs(["Hindi", "English"])
-for tab, key in ((tab_hi, "hi"), (tab_en, "en")):
+tab_en, tab_hi = st.tabs(["English", "Hindi"])
+for tab, key in ((tab_en, "en"), (tab_hi, "hi")):
     with tab:
         msg = SMS[key][tier].format(s=state)
         st.code(msg, language=None)
@@ -1416,7 +1416,69 @@ if kp_df is not None:
 else:
     b.info(t["geo"] + ": " + t["unavail"])
 
-# ---------- AI PREDICTION CENTER · HISTORICAL NOAA MODEL ----------
+# ---------- AI PREDICTION CENTER · OFFICIAL HISTORICAL Kp MODEL ----------
+@st.cache_data(ttl=86400, show_spinner=False)
+def get_gfz_historical_kp(years=5):
+    """Fetch official historical 3-hour Kp from GFZ's documented JSON API.
+
+    Uses definitive values to keep training labels stable. The API is authoritative
+    for Kp; it is separate from NOAA's higher-frequency estimated Kp feed.
+    """
+    end_time = datetime.now(timezone.utc)
+    start_time = end_time - timedelta(days=365 * years)
+    url = "https://kp.gfz.de/app/json/"
+    params = {
+        "start": start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "end": end_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "index": "Kp",
+        "status": "def",
+    }
+    response = requests.get(url, params=params, timeout=45)
+    response.raise_for_status()
+    payload = response.json()
+
+    # The API may return a list of records or a wrapper object. Normalize both.
+    if isinstance(payload, dict):
+        records = None
+        for key in ("data", "results", "result", "values", "kp", "Kp", "observations"):
+            if isinstance(payload.get(key), list):
+                records = payload[key]
+                break
+        if records is None:
+            # Also support a column-oriented response.
+            time_key = next((k for k in ("time", "datetime", "timestamp", "date", "time_tag") if k in payload), None)
+            val_key = next((k for k in ("Kp", "kp", "value", "index") if k in payload), None)
+            if time_key and val_key and isinstance(payload[time_key], list) and isinstance(payload[val_key], list):
+                records = [{"time": t, "Kp": v} for t, v in zip(payload[time_key], payload[val_key])]
+        if records is None:
+            raise ValueError("GFZ Kp API returned an unrecognized JSON structure")
+    elif isinstance(payload, list):
+        records = payload
+    else:
+        raise ValueError("GFZ Kp API response was not a JSON list/object")
+
+    rows = []
+    for rec in records:
+        if isinstance(rec, dict):
+            tk = next((k for k in ("time", "datetime", "timestamp", "date", "time_tag", "starttime", "start_time") if k in rec), None)
+            vk = next((k for k in ("Kp", "kp", "value", "index") if k in rec), None)
+            if tk and vk:
+                rows.append((rec[tk], rec[vk]))
+        elif isinstance(rec, (list, tuple)) and len(rec) >= 2:
+            rows.append((rec[0], rec[1]))
+
+    if not rows:
+        raise ValueError("GFZ Kp API returned no recognizable timestamp/Kp records")
+    df = pd.DataFrame(rows, columns=["time_tag", "kp"])
+    df["time_tag"] = pd.to_datetime(df["time_tag"], utc=True, errors="coerce")
+    df["kp"] = pd.to_numeric(df["kp"], errors="coerce")
+    df = df.dropna(subset=["time_tag", "kp"])
+    df = df[np.isfinite(df["kp"]) & df["kp"].between(0, 9)]
+    df = df.drop_duplicates("time_tag").sort_values("time_tag").reset_index(drop=True)
+    if df.empty:
+        raise ValueError("No valid definitive Kp observations remained after quality checks")
+    return df
+
 st.markdown("""
 <style>
 .ai-hero{position:relative;overflow:hidden;border:1px solid rgba(124,110,255,.35);border-radius:22px;padding:24px 26px;margin:18px 0 22px;background:radial-gradient(circle at 85% 20%,rgba(78,91,255,.25),transparent 32%),linear-gradient(120deg,rgba(12,24,47,.98),rgba(28,18,57,.94));box-shadow:0 18px 50px rgba(0,0,0,.22)}
@@ -1425,69 +1487,77 @@ st.markdown("""
 @keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live{animation:none}}
 </style>
-<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · PREDICTIVE INTELLIGENCE</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A transparent machine-learning experiment trained on recent official NOAA planetary Kp observations. The model learns from historical sequences and estimates Kp about one hour ahead. This is an experimental model output—not an official NOAA forecast or operational warning.</div></div>
+<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · PREDICTIVE INTELLIGENCE</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A time-series machine-learning experiment trained on official historical GFZ Kp records. It estimates the next 3-hour Kp value and reports chronological holdout performance. This is an experimental model output—not an official forecast or operational warning.</div></div>
 """, unsafe_allow_html=True)
 
 with st.expander("🧠 Explore the ML forecast, validation and data provenance", expanded=True):
-    st.caption("SOURCE: NOAA Space Weather Prediction Center · planetary_k_index_1m.json · observations are cached for 15 minutes. Only downloaded observations are used; no synthetic training rows are created.")
+    st.caption("HISTORICAL TRAINING SOURCE: GFZ German Research Centre for Geosciences Kp web service · definitive Kp values · 3-hour cadence · CC BY 4.0. Live dashboard observations remain sourced from NOAA separately.")
     try:
         from sklearn.ensemble import RandomForestRegressor
         from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-        ml_kp = get_kp().copy().sort_values("time_tag").drop_duplicates("time_tag")
-        ml_kp["estimated_kp"] = pd.to_numeric(ml_kp["estimated_kp"], errors="coerce")
-        ml_kp = ml_kp.dropna(subset=["estimated_kp"])
-        # The SWPC feed is sampled at short intervals. Predict the Kp value
-        # approximately one hour later using only earlier measurements.
-        lag_steps = [1, 5, 15, 30, 60]
-        ml_data = ml_kp[["time_tag", "estimated_kp"]].copy()
-        for lag in lag_steps:
-            ml_data[f"kp_lag_{lag}"] = ml_data["estimated_kp"].shift(lag)
-        ml_data["target_kp_60m"] = ml_data["estimated_kp"].shift(-60)
-        ml_data = ml_data.dropna().reset_index(drop=True)
+        with st.spinner("Loading official historical Kp records and validating the time series…"):
+            hist_kp = get_gfz_historical_kp(years=5)
 
-        if len(ml_data) < 250:
-            st.warning(f"Not enough clean official observations for a meaningful time-ordered training/test run yet ({len(ml_data)} usable rows; at least 250 required). The ML forecast is withheld rather than using fabricated data.")
-            st.info("Keep the app online and try again after more NOAA observations are available, or later expand the collector to download official historical archives.")
+        # Kp is a 3-hour index. Use past 3, 6, 9, 12, 24 and 48 hours to estimate the next interval.
+        hist_kp = hist_kp.sort_values("time_tag").drop_duplicates("time_tag").reset_index(drop=True)
+        # GFZ Kp records are nominally 3-hourly. Break sequences across large gaps so
+        # lags/targets never silently jump over missing intervals.
+        hist_kp["gap_hours"] = hist_kp["time_tag"].diff().dt.total_seconds() / 3600
+        hist_kp["segment"] = (hist_kp["gap_hours"].isna() | (hist_kp["gap_hours"] > 3.5)).cumsum()
+        lag_steps = [1, 2, 3, 4, 8, 16]
+        frames = []
+        for _, segment in hist_kp.groupby("segment", sort=False):
+            segment = segment.copy()
+            for lag in lag_steps:
+                segment[f"kp_lag_{lag}"] = segment["kp"].shift(lag)
+            segment["target_kp_next_3h"] = segment["kp"].shift(-1)
+            frames.append(segment)
+        ml_data = pd.concat(frames, ignore_index=True).dropna(subset=[f"kp_lag_{lag}" for lag in lag_steps] + ["target_kp_next_3h"])
+        feature_cols = [f"kp_lag_{lag}" for lag in lag_steps]
+
+        if len(ml_data) < 500:
+            st.warning(f"The official historical endpoint returned {len(ml_data):,} usable time-ordered training examples after quality checks. At least 500 are required for this prototype; no synthetic records are added and no forecast is shown yet.")
+            st.info("Check your internet connection and retry. The source is the official GFZ Kp archive; definitive values may lag recent conditions. If the API format changes, the parser will report the issue rather than fabricate data.")
         else:
-            feature_cols = [f"kp_lag_{lag}" for lag in lag_steps]
             split_at = int(len(ml_data) * 0.8)
             train, test = ml_data.iloc[:split_at], ml_data.iloc[split_at:]
             model = RandomForestRegressor(n_estimators=180, max_depth=10, min_samples_leaf=3, random_state=42, n_jobs=-1)
-            model.fit(train[feature_cols], train["target_kp_60m"])
+            model.fit(train[feature_cols], train["target_kp_next_3h"])
             test_pred = np.clip(model.predict(test[feature_cols]), 0, 9)
-            mae = float(mean_absolute_error(test["target_kp_60m"], test_pred))
-            rmse = float(np.sqrt(mean_squared_error(test["target_kp_60m"], test_pred)))
+            mae = float(mean_absolute_error(test["target_kp_next_3h"], test_pred))
+            rmse = float(np.sqrt(mean_squared_error(test["target_kp_next_3h"], test_pred)))
             latest_features = ml_data.iloc[[-1]][feature_cols]
             prediction = float(np.clip(model.predict(latest_features)[0], 0, 9))
-            latest_time = pd.to_datetime(ml_kp["time_tag"].iloc[-1], utc=True)
-            forecast_time = latest_time + pd.Timedelta(minutes=60)
-            current_kp = float(ml_kp["estimated_kp"].iloc[-1])
+            latest_time = pd.to_datetime(hist_kp["time_tag"].iloc[-1], utc=True)
+            forecast_time = latest_time + pd.Timedelta(hours=3)
+            current_kp = float(hist_kp["kp"].iloc[-1])
             delta = prediction - current_kp
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Latest NOAA Kp", f"{current_kp:.2f}")
-            m2.metric("ML estimate · +60 min", f"{prediction:.2f}", f"{delta:+.2f} vs latest")
+            m1.metric("Latest definitive GFZ Kp", f"{current_kp:.1f}")
+            m2.metric("ML estimate · +3 hours", f"{prediction:.2f}", f"{delta:+.2f} vs latest")
             m3.metric("Test MAE", f"{mae:.3f}", help="Mean absolute error on the later 20% of the time-ordered dataset; lower is better.")
             m4.metric("Test RMSE", f"{rmse:.3f}", help="Root mean squared error on the later 20% of the time-ordered dataset; lower is better.")
-            st.caption(f"Forecast target time: {forecast_time.strftime('%Y-%m-%d %H:%M UTC')} · Latest source observation: {latest_time.strftime('%Y-%m-%d %H:%M UTC')} · Training rows: {len(train):,} · Test rows: {len(test):,}")
+            st.caption(f"Forecast target time: {forecast_time.strftime('%Y-%m-%d %H:%M UTC')} · Latest definitive record: {latest_time.strftime('%Y-%m-%d %H:%M UTC')} · Official historical records: {len(hist_kp):,} · Training examples: {len(train):,} · Test examples: {len(test):,}")
+            st.caption("GFZ definitive Kp can lag real time by days to weeks. This forecast is based on the latest available definitive record, not the live NOAA nowcast; compare with current NOAA/GFZ operational forecasts before acting.")
 
-            chart_df = ml_data[["time_tag", "estimated_kp", "target_kp_60m"]].tail(240).copy()
-            chart_df = chart_df.rename(columns={"estimated_kp": "Observed Kp", "target_kp_60m": "Observed Kp +60 min (target)"})
-            st.markdown("#### Recent official observations and one-hour target")
+            chart_df = ml_data[["time_tag", "kp", "target_kp_next_3h"]].tail(240).copy()
+            chart_df = chart_df.rename(columns={"kp": "Observed GFZ Kp", "target_kp_next_3h": "Next 3-hour Kp target"})
+            st.markdown("#### Historical Kp and next-interval targets")
             st.line_chart(chart_df.set_index("time_tag"), height=250)
             st.markdown("#### Model transparency")
             importance = pd.DataFrame({"Feature": feature_cols, "Importance": model.feature_importances_}).sort_values("Importance", ascending=False)
             st.bar_chart(importance.set_index("Feature"), height=190)
-            st.caption("Validation uses a chronological split: earlier rows train the model and later rows test it. Nearby rows can be strongly correlated, so these metrics are an initial project evaluation, not proof of operational forecasting skill. The model is retrained from the available feed when this section reruns; it does not yet persist a long-term archive between app restarts.")
+            st.caption("Validation uses a chronological split: earlier examples train the model and later examples test it. Consecutive Kp values are correlated, so these metrics are an initial project evaluation—not proof of operational forecasting skill. Source: GFZ Kp index, CC BY 4.0; acknowledge GFZ Helmholtz Centre for Geosciences.")
             if prediction >= 5:
-                st.warning("The experimental ML estimate is in the Kp ≥ 5 range. Check the official NOAA forecast and alerts before taking action; do not rely on this model alone.")
+                st.warning("The experimental ML estimate is in the Kp ≥ 5 range. Check current official NOAA/GFZ forecasts and alerts; do not rely on this model alone.")
             else:
-                st.info("The experimental ML estimate is below Kp 5. Continue monitoring official NOAA products; this is not a guarantee of quiet conditions.")
+                st.info("The experimental ML estimate is below Kp 5 for the next 3-hour interval. Continue monitoring current official products; this is not a guarantee of quiet conditions.")
     except ImportError:
-        st.error("The ML library is not installed. Add `scikit-learn` to requirements.txt and restart the app.")
+        st.error("The ML library is not installed. In the VS Code terminal run: python -m pip install scikit-learn")
     except Exception as exc:
-        st.warning(f"The ML Prediction Center could not retrieve or process official NOAA observations right now: {exc}")
-        st.caption("The rest of the dashboard remains available. Please retry when the NOAA data service is reachable.")
+        st.warning(f"The AI Prediction Center could not retrieve or process the official historical GFZ Kp dataset: {exc}")
+        st.caption("The rest of the dashboard remains available. Retry later if the data service is unreachable. No fabricated observations are used.")
 
 # ---------- End AI Prediction Center ----------
 
