@@ -1533,7 +1533,7 @@ if kp_df is not None:
 else:
     b.info(t["geo"] + ": " + t["unavail"])
 
-# ---------- MODULE 03 · AI ALERT COPILOT + PREDICTIVE INTELLIGENCE ----------
+# ---------- MODULE 03 · SOLAR SHIELD AI + PREDICTIVE INTELLIGENCE ----------
 st.markdown('<div class="module-ribbon"><span>03</span><div><b>SOLAR SHIELD AI & PREDICTIVE INTELLIGENCE</b><small>Evidence summary · recommended response · experimental machine-learning forecast</small></div></div>', unsafe_allow_html=True)
 st.markdown("""
 <style>
@@ -1544,10 +1544,10 @@ st.markdown("""
 @keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live,.ai-hero{animation:none;transition:none}}
 </style>
-<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>EXPLAINABLE ALERT ASSISTANT</div><div class="ai-title"></div><div class="ai-copy">Summarizes the current app evidence into a structured situation report and recommended actions. This version uses transparent rules and safe fallback logic; it does not call an external LLM or require an API key. GNSS receiver values remain simulated unless a real receiver feed is connected.</div></div>
+<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>INTELLIGENT SPACE-WEATHER PROTECTION</div><div class="ai-title">Solar Shield AI</div><div class="ai-copy">Summarizes the current app evidence into a structured situation report and recommended actions. This version uses transparent rules and safe fallback logic; it does not call an external LLM or require an API key. GNSS receiver values remain simulated unless a real receiver feed is connected.</div></div>
 """, unsafe_allow_html=True)
-# Solar Shield AI
-# Build an explainable copilot report from current readings plus the GNSS test panel.
+
+# Build an Solar Shield AI report from current readings plus the GNSS test panel.
 solar_class_now, _ = _solar_class(max(float(flux_v), 0.0))
 copilot_findings = []
 copilot_actions = []
@@ -1577,7 +1577,7 @@ if not copilot_actions:
 copilot_level = "HIGH ATTENTION" if (flux_v >= 1e-4 or kp_v >= 7 or ('gnss_exceeded' in globals() and gnss_exceeded)) else ("WATCH" if (flux_v >= 1e-5 or kp_v >= 5) else "ROUTINE MONITORING")
 cc1, cc2 = st.columns([1, 2])
 with cc1:
-    st.metric("Copilot assessment", copilot_level)
+    st.metric("Solar Shield AI assessment", copilot_level)
     st.caption("Rule-based fallback is always available. This is decision support, not an official warning.")
 with cc2:
     st.markdown("#### Evidence summary")
@@ -1586,12 +1586,12 @@ with cc2:
 st.markdown("#### Recommended actions")
 for action in copilot_actions:
     st.markdown(f"- {action}")
-if st.button("Acknowledge current copilot report", key="sd_ack_copilot"):
+if st.button("Acknowledge current Solar Shield AI report", key="sd_ack_copilot"):
     st.session_state.setdefault("sd_audit_log", []).append({"Time (UTC)": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "Event": "Solar Shield AI report", "Evidence": f"Assessment: {copilot_level}; Kp {kp_v:.1f}; X-ray {flux_v:.2e} W/m²", "Action": "Report acknowledged"})
-    st.success("Copilot report acknowledged and added to this session's audit trail.")
+    st.success("Solar Shield AI report acknowledged and added to this session's audit trail.")
 
 st.markdown("#### Experimental Kp prediction model")
-st.caption("The Random Forest model below remains an experimental historical-data prediction; it is separate from the explainable alert copilot and must not be treated as an official warning.")
+st.caption("The Random Forest model below remains an experimental historical-data prediction; it is separate from the Solar Shield AI assistant and must not be treated as an official warning.")
 
 # ---------- AI PREDICTION CENTER · OFFICIAL HISTORICAL Kp MODEL ----------
 @st.cache_data(ttl=86400, show_spinner=False)
