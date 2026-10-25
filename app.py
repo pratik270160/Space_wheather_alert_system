@@ -1243,6 +1243,81 @@ c_idx = gnss_idx(kp_loc)
 pause = kp_loc >= 7
 caution = kp_loc >= 5
 
+# ---------- MODULE 02 add-on · Solar flare + GNSS degradation monitor ----------
+st.markdown("""
+<style>
+.sd-feature-card{position:relative;overflow:hidden;border:1px solid rgba(85,230,242,.25);border-radius:18px;padding:18px 20px;margin:10px 0 14px;background:linear-gradient(125deg,rgba(10,32,55,.94),rgba(17,38,70,.82));box-shadow:0 12px 28px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.08);transition:transform .25s ease,box-shadow .25s ease}
+.sd-feature-card:hover{transform:translateY(-3px);box-shadow:0 18px 34px rgba(25,165,220,.18)}
+.sd-feature-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#55e6f2,#6677ff);box-shadow:0 0 18px rgba(85,230,242,.45)}
+.sd-feature-title{font-size:17px;font-weight:800;color:#eff8ff;margin-bottom:5px}.sd-feature-sub{font-size:12px;color:#a8bfd7;line-height:1.5}
+.sd-live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#59f3bc;box-shadow:0 0 12px #59f3bc;margin-right:8px;animation:sdPulse 1.8s infinite}
+.sd-flare-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff9366;box-shadow:0 0 14px #ff754d;margin-right:8px;animation:sdPulse 1.2s infinite}
+@keyframes sdPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}
+@media(prefers-reduced-motion:reduce){.sd-live-dot,.sd-flare-dot{animation:none}.sd-feature-card{transition:none}}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="sd-feature-card"><div class="sd-feature-title"><span class="sd-live-dot"></span>Solar Flare & Radio-Blackout Monitor</div><div class="sd-feature-sub">Uses the latest available NOAA X-ray flux reading. Flare class and radio-blackout risk are separate indicators; this is monitoring, not a guarantee of impact at a specific location.</div></div>', unsafe_allow_html=True)
+
+def _solar_class(flux_value):
+    if flux_value >= 1e-4:
+        return "X-class", 4
+    if flux_value >= 1e-5:
+        return "M-class", 3
+    if flux_value >= 1e-6:
+        return "C-class", 2
+    if flux_value >= 1e-7:
+        return "B-class", 1
+    return "A-class / below", 0
+
+solar_class, solar_class_idx = _solar_class(max(float(flux_v), 0.0))
+flare_cols = st.columns(4)
+flare_cols[0].metric("Latest X-ray flux", f"{flux_v:.2e} W/m²", help="Latest value returned by the app's NOAA X-ray feed; if unavailable, the dashboard uses its existing fallback value.")
+flare_cols[1].metric("X-ray flare class", solar_class, help="Simplified A/B/C/M/X classification from X-ray flux thresholds.")
+flare_cols[2].metric("App radio-risk category", f"R{r_global}", help="The app's rule-based radio-risk category; the official NOAA R scale has its own operational definitions.")
+flare_cols[3].metric("Geomagnetic level", g_label(kp_v), f"Kp {kp_v:.1f}")
+if solar_class_idx >= 3:
+    st.warning("Elevated X-ray flux detected by the current feed. Review the radio-risk card and current official space-weather bulletins; this app's class estimate is not a standalone official alert.")
+else:
+    st.caption("No M/X-class threshold is indicated by the current X-ray value in this simplified classification. Continue monitoring live data and data freshness.")
+
+with st.expander("☀️ Test a simulated solar-flare event", expanded=False):
+    st.caption("DEMO ONLY — these controls do not change the live readings, send messages, or represent a real observed flare.")
+    sim_flare_on = st.checkbox("Enable simulated solar flare", key="sd_sim_flare_on")
+    sim_flare_flux = st.select_slider("Simulated X-ray flux (W/m²)", options=[1e-7, 1e-6, 1e-5, 1e-4, 1e-3], value=1e-4, format_func=lambda x: f"{x:.0e}", key="sd_sim_flare_flux")
+    if sim_flare_on:
+        sim_class, _ = _solar_class(float(sim_flare_flux))
+        sim_radio = radio_level(float(sim_flare_flux))
+        st.error(f"SIMULATED EVENT · {sim_class} solar X-ray level · app radio-risk R{sim_radio}")
+        st.write("Recommended demo response: review HF radio links, verify backup communication paths, and acknowledge the simulated event.")
+        if st.button("Acknowledge simulated flare", key="sd_ack_flare"):
+            st.session_state.setdefault("sd_audit_log", []).append({"Time (UTC)": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "Event": "Simulated solar flare", "Evidence": f"Flux {sim_flare_flux:.0e} W/m²; {sim_class}; R{sim_radio}", "Action": "Acknowledged"})
+            st.success("Simulated event acknowledged and added to this session's audit trail.")
+
+st.markdown('<div class="sd-feature-card"><div class="sd-feature-title"><span class="sd-live-dot"></span>GNSS Degradation Monitoring</div><div class="sd-feature-sub">The current app does not connect to a physical GNSS receiver. Use this clearly labelled test panel to simulate a receiver position error and check the response threshold. Actual degradation requires real receiver/reference measurements.</div></div>', unsafe_allow_html=True)
+gnss_col1, gnss_col2 = st.columns(2)
+with gnss_col1:
+    gnss_error_m = st.slider("Simulated GNSS position error (metres)", min_value=0.0, max_value=50.0, value=2.0, step=0.5, key="sd_gnss_error_m")
+with gnss_col2:
+    gnss_limit_m = st.slider("Configured error limit (metres)", min_value=1.0, max_value=20.0, value=5.0, step=0.5, key="sd_gnss_limit_m")
+gnss_exceeded = gnss_error_m > gnss_limit_m
+gnss_status = "OPERATOR_REVIEW" if gnss_exceeded else "NORMAL · SIMULATED"
+gnss_m1, gnss_m2, gnss_m3 = st.columns(3)
+gnss_m1.metric("Receiver error", f"{gnss_error_m:.1f} m")
+gnss_m2.metric("Configured limit", f"{gnss_limit_m:.1f} m")
+gnss_m3.metric("Demo controller", "OPERATOR_REVIEW" if gnss_exceeded else "MONITORING")
+if gnss_exceeded:
+    st.error("GNSS DEGRADATION SIMULATION: receiver error exceeds the configured limit. Ask the operator to review positioning and switch to manual control where appropriate.")
+else:
+    st.success("No threshold breach in this simulated receiver input. This does not confirm that a real GNSS receiver is healthy.")
+if st.button("Record GNSS test event in audit trail", key="sd_record_gnss"):
+    st.session_state.setdefault("sd_audit_log", []).append({"Time (UTC)": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "Event": "Simulated GNSS receiver check", "Evidence": f"Error {gnss_error_m:.1f} m; configured limit {gnss_limit_m:.1f} m", "Action": gnss_status})
+    st.success("GNSS test event recorded in this session's audit trail.")
+
+if st.session_state.get("sd_audit_log"):
+    with st.expander("🧾 Demo audit trail", expanded=False):
+        st.dataframe(pd.DataFrame(st.session_state.sd_audit_log[::-1]), hide_index=True, width="stretch")
+
 r_sev = {0: 0, 1: 1, 2: 1, 3: 2, 4: 3, 5: 3}[r_loc]
 sev = max(c_idx, r_sev)
 tier = 2 if (pause or sev >= 3) else (1 if sev >= 1 else 0)
@@ -1458,6 +1533,66 @@ if kp_df is not None:
 else:
     b.info(t["geo"] + ": " + t["unavail"])
 
+# ---------- MODULE 03 · AI ALERT COPILOT + PREDICTIVE INTELLIGENCE ----------
+st.markdown('<div class="module-ribbon"><span>03</span><div><b>AI ALERT COPILOT & PREDICTIVE INTELLIGENCE</b><small>Evidence summary · recommended response · experimental machine-learning forecast</small></div></div>', unsafe_allow_html=True)
+st.markdown("""
+<style>
+.ai-hero{position:relative;overflow:hidden;border:1px solid rgba(124,110,255,.35);border-radius:22px;padding:24px 26px;margin:18px 0 22px;background:radial-gradient(circle at 85% 20%,rgba(78,91,255,.25),transparent 32%),linear-gradient(120deg,rgba(12,24,47,.98),rgba(28,18,57,.94));box-shadow:0 18px 50px rgba(0,0,0,.22);transition:transform .25s ease,box-shadow .25s ease}
+.ai-hero:hover{transform:translateY(-2px);box-shadow:0 22px 48px rgba(40,120,255,.17)}
+.ai-hero:after{content:"";position:absolute;width:230px;height:230px;right:-55px;top:-115px;border:1px solid rgba(121,210,255,.26);border-radius:50%;box-shadow:0 0 0 22px rgba(121,210,255,.035),0 0 0 48px rgba(121,210,255,.025);animation:orbitPulse 7s ease-in-out infinite}
+.ai-kicker{font-size:11px;letter-spacing:.19em;font-weight:800;color:#a5b4fc}.ai-title{font-size:clamp(24px,3vw,38px);font-weight:850;line-height:1.1;margin:8px 0;color:#f2f5ff}.ai-copy{color:#b9c6e8;max-width:850px;font-size:14px}.ai-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#61f4c0;box-shadow:0 0 14px #61f4c0;margin-right:8px;animation:livePulse 1.8s infinite}
+@keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live,.ai-hero{animation:none;transition:none}}
+</style>
+<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>EXPLAINABLE ALERT ASSISTANT</div><div class="ai-title">AI Alert Copilot</div><div class="ai-copy">Summarizes the current app evidence into a structured situation report and recommended actions. This version uses transparent rules and safe fallback logic; it does not call an external LLM or require an API key. GNSS receiver values remain simulated unless a real receiver feed is connected.</div></div>
+""", unsafe_allow_html=True)
+
+# Build an explainable copilot report from current readings plus the GNSS test panel.
+solar_class_now, _ = _solar_class(max(float(flux_v), 0.0))
+copilot_findings = []
+copilot_actions = []
+if flux_v >= 1e-4:
+    copilot_findings.append(f"X-ray flux is {flux_v:.2e} W/m² ({solar_class_now} threshold in the app's simplified classification).")
+    copilot_actions.append("Review current NOAA radio-blackout alerts and verify alternate HF/communications paths.")
+elif flux_v >= 1e-5:
+    copilot_findings.append(f"X-ray flux is elevated at {flux_v:.2e} W/m² ({solar_class_now} threshold).")
+    copilot_actions.append("Monitor HF radio links and check official space-weather bulletins.")
+else:
+    copilot_findings.append(f"Current X-ray flux is {flux_v:.2e} W/m² ({solar_class_now} threshold). No high X-ray threshold is indicated by this simplified rule.")
+if kp_v >= 5:
+    copilot_findings.append(f"Geomagnetic activity is Kp {kp_v:.1f} ({g_label(kp_v)} threshold or higher).")
+    copilot_actions.append("Check GNSS-dependent timing/navigation and keep operational backup procedures available.")
+else:
+    copilot_findings.append(f"Current Kp is {kp_v:.1f}, below the app's G1 threshold of Kp 5.")
+if 'gnss_exceeded' in globals() and gnss_exceeded:
+    copilot_findings.append(f"SIMULATED GNSS receiver error {gnss_error_m:.1f} m exceeds configured limit {gnss_limit_m:.1f} m.")
+    copilot_actions.append("OPERATOR REVIEW: verify receiver/reference data and consider manual control before precision operations.")
+else:
+    copilot_findings.append("No GNSS threshold breach is indicated by the current demo input; no physical receiver health check is connected.")
+if demo:
+    copilot_findings.append("Dashboard is in demo mode; solar/geomagnetic readings are simulated.")
+if not copilot_actions:
+    copilot_actions.append("Continue monitoring fresh official observations. No elevated action is indicated by these simplified rules.")
+
+copilot_level = "HIGH ATTENTION" if (flux_v >= 1e-4 or kp_v >= 7 or ('gnss_exceeded' in globals() and gnss_exceeded)) else ("WATCH" if (flux_v >= 1e-5 or kp_v >= 5) else "ROUTINE MONITORING")
+cc1, cc2 = st.columns([1, 2])
+with cc1:
+    st.metric("Copilot assessment", copilot_level)
+    st.caption("Rule-based fallback is always available. This is decision support, not an official warning.")
+with cc2:
+    st.markdown("#### Evidence summary")
+    for finding in copilot_findings:
+        st.markdown(f"- {finding}")
+st.markdown("#### Recommended actions")
+for action in copilot_actions:
+    st.markdown(f"- {action}")
+if st.button("Acknowledge current copilot report", key="sd_ack_copilot"):
+    st.session_state.setdefault("sd_audit_log", []).append({"Time (UTC)": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "Event": "AI Alert Copilot report", "Evidence": f"Assessment: {copilot_level}; Kp {kp_v:.1f}; X-ray {flux_v:.2e} W/m²", "Action": "Report acknowledged"})
+    st.success("Copilot report acknowledged and added to this session's audit trail.")
+
+st.markdown("#### Experimental Kp prediction model")
+st.caption("The Random Forest model below remains an experimental historical-data prediction; it is separate from the explainable alert copilot and must not be treated as an official warning.")
+
 # ---------- AI PREDICTION CENTER · OFFICIAL HISTORICAL Kp MODEL ----------
 @st.cache_data(ttl=86400, show_spinner=False)
 def get_gfz_historical_kp(years=5):
@@ -1546,17 +1681,6 @@ def get_gfz_historical_kp(years=5):
     if df.empty:
         raise ValueError("GFZ Kp response contained records, but none passed timestamp and Kp quality checks")
     return df
-
-st.markdown("""
-<style>
-.ai-hero{position:relative;overflow:hidden;border:1px solid rgba(124,110,255,.35);border-radius:22px;padding:24px 26px;margin:18px 0 22px;background:radial-gradient(circle at 85% 20%,rgba(78,91,255,.25),transparent 32%),linear-gradient(120deg,rgba(12,24,47,.98),rgba(28,18,57,.94));box-shadow:0 18px 50px rgba(0,0,0,.22)}
-.ai-hero:after{content:"";position:absolute;width:230px;height:230px;right:-55px;top:-115px;border:1px solid rgba(121,210,255,.26);border-radius:50%;box-shadow:0 0 0 22px rgba(121,210,255,.035),0 0 0 48px rgba(121,210,255,.025);animation:orbitPulse 7s ease-in-out infinite}
-.ai-kicker{font-size:11px;letter-spacing:.19em;font-weight:800;color:#a5b4fc}.ai-title{font-size:clamp(24px,3vw,38px);font-weight:850;line-height:1.1;margin:8px 0;color:#f2f5ff}.ai-copy{color:#b9c6e8;max-width:850px;font-size:14px}.ai-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#61f4c0;box-shadow:0 0 14px #61f4c0;margin-right:8px;animation:livePulse 1.8s infinite}
-@keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
-@media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live{animation:none}}
-</style>
-<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>MODULE 03 · PREDICTIVE INTELLIGENCE</div><div class="ai-title">AI Prediction Center</div><div class="ai-copy">A time-series machine-learning experiment trained on official historical GFZ Kp records. It estimates the next 3-hour Kp value and reports chronological holdout performance. This is an experimental model output—not an official forecast or operational warning.</div></div>
-""", unsafe_allow_html=True)
 
 with st.expander("🧠 Explore the ML forecast, validation and data provenance", expanded=True):
     st.caption("HISTORICAL TRAINING SOURCE: GFZ German Research Centre for Geosciences Kp web service · definitive Kp values · 3-hour cadence · CC BY 4.0. Live dashboard observations remain sourced from NOAA separately.")
