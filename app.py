@@ -1534,7 +1534,7 @@ else:
     b.info(t["geo"] + ": " + t["unavail"])
 
 # ---------- MODULE 03 · AI ALERT COPILOT + PREDICTIVE INTELLIGENCE ----------
-st.markdown('<div class="module-ribbon"><span>03</span><div><b>AI ALERT COPILOT & PREDICTIVE INTELLIGENCE</b><small>Evidence summary · recommended response · experimental machine-learning forecast</small></div></div>', unsafe_allow_html=True)
+st.markdown('<div class="module-ribbon"><span>03</span><div><b>SOLAR SHIELD AI & PREDICTIVE INTELLIGENCE</b><small>Evidence summary · recommended response · experimental machine-learning forecast</small></div></div>', unsafe_allow_html=True)
 st.markdown("""
 <style>
 .ai-hero{position:relative;overflow:hidden;border:1px solid rgba(124,110,255,.35);border-radius:22px;padding:24px 26px;margin:18px 0 22px;background:radial-gradient(circle at 85% 20%,rgba(78,91,255,.25),transparent 32%),linear-gradient(120deg,rgba(12,24,47,.98),rgba(28,18,57,.94));box-shadow:0 18px 50px rgba(0,0,0,.22);transition:transform .25s ease,box-shadow .25s ease}
@@ -1544,9 +1544,9 @@ st.markdown("""
 @keyframes orbitPulse{0%,100%{transform:scale(.96) rotate(0deg);opacity:.65}50%{transform:scale(1.05) rotate(12deg);opacity:1}}@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.ai-hero:after,.ai-live,.ai-hero{animation:none;transition:none}}
 </style>
-<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>EXPLAINABLE ALERT ASSISTANT</div><div class="ai-title">AI Alert Copilot</div><div class="ai-copy">Summarizes the current app evidence into a structured situation report and recommended actions. This version uses transparent rules and safe fallback logic; it does not call an external LLM or require an API key. GNSS receiver values remain simulated unless a real receiver feed is connected.</div></div>
+<div class="ai-hero"><div class="ai-kicker"><span class="ai-live"></span>EXPLAINABLE ALERT ASSISTANT</div><div class="ai-title"></div><div class="ai-copy">Summarizes the current app evidence into a structured situation report and recommended actions. This version uses transparent rules and safe fallback logic; it does not call an external LLM or require an API key. GNSS receiver values remain simulated unless a real receiver feed is connected.</div></div>
 """, unsafe_allow_html=True)
-
+# Solar Shield AI
 # Build an explainable copilot report from current readings plus the GNSS test panel.
 solar_class_now, _ = _solar_class(max(float(flux_v), 0.0))
 copilot_findings = []
@@ -1587,7 +1587,7 @@ st.markdown("#### Recommended actions")
 for action in copilot_actions:
     st.markdown(f"- {action}")
 if st.button("Acknowledge current copilot report", key="sd_ack_copilot"):
-    st.session_state.setdefault("sd_audit_log", []).append({"Time (UTC)": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "Event": "AI Alert Copilot report", "Evidence": f"Assessment: {copilot_level}; Kp {kp_v:.1f}; X-ray {flux_v:.2e} W/m²", "Action": "Report acknowledged"})
+    st.session_state.setdefault("sd_audit_log", []).append({"Time (UTC)": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "Event": "Solar Shield AI report", "Evidence": f"Assessment: {copilot_level}; Kp {kp_v:.1f}; X-ray {flux_v:.2e} W/m²", "Action": "Report acknowledged"})
     st.success("Copilot report acknowledged and added to this session's audit trail.")
 
 st.markdown("#### Experimental Kp prediction model")
