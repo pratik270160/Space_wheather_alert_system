@@ -1484,45 +1484,16 @@ fig = px.scatter_map(
     hover_data={"lat": False, "lon": False, "kp_local": True},
     color_discrete_map={t["levels"][i]: RISK_COLORS[i] for i in range(4)},
     category_orders={"risk": t["levels"]},
-    zoom=3.4,
-    center={"lat": 23.0, "lon": 80.0},
-    height=480,
-    map_style="carto-darkmatter",
+    zoom=3.2,
+    center={"lat": 23.5, "lon": 82.0},
+    height=560,
+    map_style="open-street-map",
 )
 fig.update_traces(marker=dict(size=18), selector=dict(type="scattermap"))
-
-# Overlay the India-claimed PoK region so the map does not visually imply
-# that Pakistan-administered Kashmir is outside India's claimed boundary.
-# This is an illustrative outline, not a survey-grade administrative boundary.
-pok_outline = [
-    (35.45, 74.55), (35.35, 75.25), (35.05, 76.05),
-    (34.70, 76.55), (34.25, 76.35), (33.85, 75.95),
-    (33.45, 75.55), (33.05, 75.10), (32.65, 74.75),
-    (32.35, 74.25), (32.55, 73.85), (33.00, 73.65),
-    (33.50, 73.55), (34.00, 73.70), (34.45, 73.85),
-    (34.90, 74.15), (35.20, 74.30), (35.45, 74.55),
-]
-pok_lats = [point[0] for point in pok_outline]
-pok_lons = [point[1] for point in pok_outline]
-fig.add_trace(go.Scattermap(
-    lat=pok_lats,
-    lon=pok_lons,
-    mode="lines",
-    fill="toself",
-    fillcolor="rgba(255, 190, 70, 0.28)",
-    line=dict(color="#ffc857", width=3),
-    name="PoK (claimed by India)",
-    hovertemplate="PoK — claimed by India<extra></extra>",
-))
-fig.add_trace(go.Scattermap(
-    lat=[34.1], lon=[74.7], mode="text",
-    text=["PoK"], textfont=dict(size=14, color="#ffe4a3"),
-    name="PoK label", showlegend=False,
-    hovertemplate="PoK — claimed by India<extra></extra>",
-))
+# Show the full Indian subcontinent map without adding any artificial region
+# highlight or label. The basemap supplies the geographic outlines.
 fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), legend_title_text="")
 st.plotly_chart(fig, width="stretch")
-st.caption("PoK is highlighted within India's claimed boundary. The highlighted outline is illustrative; the region is administered by Pakistan and claimed by India.")
 
 # ---------- Forecast: official first, experimental second ----------
 st.subheader(t["fc"])
