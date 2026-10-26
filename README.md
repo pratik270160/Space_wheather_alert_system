@@ -15,3 +15,6 @@ Built With
 - Python
 - Streamlit
 - Data visualization libraries
+
+Solar Shield is an AI-powered space weather monitoring and alert system that tracks solar activity, assesses potential space weather risks, and provides forecasts and actionable insights through an interactive dashboard.
+website URL:https://ai.studio/apps/02c5f7f0-d6c1-429e-a33a-30d297aba657
