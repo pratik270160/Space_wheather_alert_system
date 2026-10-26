@@ -1462,7 +1462,7 @@ for tab, key in ((tab_en, "en"), (tab_hi, "hi")):
         st.code(msg, language=None)
         st.link_button(TXT[key]["wa"], "https://wa.me/?text=" + quote(msg))
 
-# ---------- India map ----------
+# ---------- India map: full Indian boundary, including PoK in India's claimed outline ----------
 st.subheader(t["map"])
 rows = []
 for name, (la, lo) in STATES.items():
@@ -1475,25 +1475,117 @@ for name, (la, lo) in STATES.items():
         "kp_local": round(k, 1),
     })
 map_df = pd.DataFrame(rows)
-fig = px.scatter_map(
-    map_df,
-    lat="lat",
-    lon="lon",
-    color="risk",
-    hover_name="state",
-    hover_data={"lat": False, "lon": False, "kp_local": True},
-    color_discrete_map={t["levels"][i]: RISK_COLORS[i] for i in range(4)},
-    category_orders={"risk": t["levels"]},
-    zoom=3.2,
-    center={"lat": 23.5, "lon": 82.0},
-    height=560,
-    map_style="open-street-map",
-)
-fig.update_traces(marker=dict(size=18), selector=dict(type="scattermap"))
-# Show the full Indian subcontinent map without adding any artificial region
-# highlight or label. The basemap supplies the geographic outlines.
-fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), legend_title_text="")
-st.plotly_chart(fig, width="stretch")
+
+# Use a dedicated India state-boundary GeoJSON instead of relying on a world
+# basemap, which can show disputed Kashmir areas under a neighbouring label.
+# The source represents India's stated boundary; no separate PoK overlay is drawn.
+@st.cache_data(ttl=86400, show_spinner=False)
+def get_india_boundary_geojson():
+    url = (
+        "https://raw.githubusercontent.com/AbhinavSwami28/"
+        "india-official-geojson/main/india-states-simplified.geojson"
+    )
+    response = requests.get(url, timeout=20)
+    response.raise_for_status()
+    geo = response.json()
+    if geo.get("type") != "FeatureCollection" or not geo.get("features"):
+        raise ValueError("India boundary GeoJSON is empty or invalid")
+    return geo
+
+try:
+    india_geo = get_india_boundary_geojson()
+
+    # Build a reliable feature key from the names present in the GeoJSON.
+    # Keep unknown feature names too, so no polygon is silently dropped.
+    known_names = list(STATES.keys())
+    aliases = {
+        "jammu and kashmir": "Jammu & Kashmir",
+        "jammu kashmir": "Jammu & Kashmir",
+        "jammu & kashmir": "Jammu & Kashmir",
+        "ladakh": "Ladakh",
+        "nct of delhi": "Delhi",
+        "national capital territory of delhi": "Delhi",
+        "uttaranchal": "Uttarakhand",
+        "orissa": "Odisha",
+    }
+    def normalize_map_name(value):
+        return " ".join(str(value).lower().replace("_", " ").replace("-", " ").split())
+
+    boundary_locations = []
+    for idx, feature in enumerate(india_geo["features"]):
+        props = feature.setdefault("properties", {})
+        values = [v for v in props.values() if isinstance(v, (str, int, float))]
+        matched = None
+        for value in values:
+            normalized = normalize_map_name(value)
+            candidate = aliases.get(normalized, None)
+            if candidate in known_names:
+                matched = candidate
+                break
+            for state_name in known_names:
+                if normalized == normalize_map_name(state_name):
+                    matched = state_name
+                    break
+            if matched:
+                break
+        # The key is unique even if the source uses a different name for a feature.
+        map_key = matched if matched else f"Boundary {idx + 1}"
+        props["__map_key"] = map_key
+        boundary_locations.append(map_key)
+
+    fig = go.Figure()
+    fig.add_trace(go.Choroplethmap(
+        geojson=india_geo,
+        locations=boundary_locations,
+        featureidkey="properties.__map_key",
+        z=[1] * len(boundary_locations),
+        colorscale=[[0, "#d8e5d1"], [1, "#d8e5d1"]],
+        marker_line_color="#394b43",
+        marker_line_width=1.1,
+        showscale=False,
+        hoverinfo="skip",
+        name="India state boundaries",
+    ))
+    fig.add_trace(go.Scattermap(
+        lat=map_df["lat"],
+        lon=map_df["lon"],
+        mode="markers",
+        marker=dict(
+            size=12,
+            color=map_df["risk"].map({t["levels"][i]: RISK_COLORS[i] for i in range(4)}),
+        ),
+        text=map_df["state"],
+        customdata=map_df[["risk", "kp_local"]].to_numpy(),
+        hovertemplate="<b>%{text}</b><br>GNSS concern: %{customdata[0]}<br>Local Kp estimate: %{customdata[1]}<extra></extra>",
+        name="State GNSS concern",
+    ))
+    fig.update_layout(
+        map=dict(style="white-bg", center=dict(lat=23.5, lon=82.0), zoom=2.8),
+        height=560,
+        margin=dict(l=0, r=0, t=0, b=0),
+        legend_title_text="",
+    )
+    st.plotly_chart(fig, width="stretch")
+    st.caption("State boundaries use an India-focused GeoJSON source. The map follows India's stated boundary, including the Kashmir region, without separately highlighting PoK.")
+except Exception as map_error:
+    st.warning("The detailed India boundary could not be loaded. Showing state GNSS markers on a basic map instead.")
+    fig = px.scatter_map(
+        map_df,
+        lat="lat",
+        lon="lon",
+        color="risk",
+        hover_name="state",
+        hover_data={"lat": False, "lon": False, "kp_local": True},
+        color_discrete_map={t["levels"][i]: RISK_COLORS[i] for i in range(4)},
+        category_orders={"risk": t["levels"]},
+        zoom=2.8,
+        center={"lat": 23.5, "lon": 82.0},
+        height=560,
+        map_style="open-street-map",
+    )
+    fig.update_traces(marker=dict(size=12))
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), legend_title_text="")
+    st.plotly_chart(fig, width="stretch")
 
 # ---------- Forecast: official first, experimental second ----------
 st.subheader(t["fc"])
